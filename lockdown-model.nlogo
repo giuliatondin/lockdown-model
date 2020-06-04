@@ -1,14 +1,17 @@
-turtles-own
-[  sick?                ;; if true, the turtle is infectious
-   remaining-immunity  ;; how many weeks of immunity the turtle has left
+breed [healthys healthy]
+breed [sicks sick]
+
+turtles-own [
+   sick?               ;; if true, the turtle is infectious
+   immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
    speed
+   leak                ;; prob of leak lockdown
 ]
 
-globals
-[ young-population
-  elderly-population
+globals [
   lockdown?
+  counter
 ]
 
 to setup
@@ -18,45 +21,61 @@ to setup
 end
 
 to setup-population
-  set elderly-population ((population * elderly-percentage) / 100)
-  set young-population (population - elderly-population)
-  create-turtles young-population
+  set-default-shape turtles "person"
+  create-turtles population
   [
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
-    set shape "circle"
     set color green
-    set speed 1
+    set breed healthys
+    set leak leak-probability
+    set speed 0.1
+    set sick? false
+    set sick-time 0
+    set immune? false
   ]
-
-  create-turtles elderly-population
-  [
-    setxy (random-xcor * 0.95) (random-ycor * 0.95)
-    set shape "triangle"
-    set color green
-    set speed 1
-  ]
-  ask n-of initial-infecteds turtles
-    [ get-sick ]
 end
 
-to get-sick
-  set sick? true
-  set remaining-immunity 0
-  set color red
+;; turtle become infected
+to infected
+  ask one-of healthys [
+    set breed sicks
+    set color red
+    set leak leak-probability
+    set speed 0.1
+    set sick? true
+  ]
 end
 
 to go
   move-turtles
-  ask turtles [
-    if ticks > workday-duration [
-       set speed 0
-    ]
-  ]
+  epidemic
   tick
 end
 
+;; Turtles move about at random.
 to move-turtles
-   ask n-of young-population turtles [ fd speed ]
+  ask turtles [
+    let current-turtle self
+    forward speed display
+    if distance current-turtle < 1 + (count sicks) [
+      set heading heading + (random-float 5 - random-float 5)]
+  ]
+end
+
+;; Turtles infecting others
+to epidemic
+  ask sicks [
+    let current-sick self
+    ask healthys with[distance current-sick < 1 and not immune?] [
+       if random-float 100 < infectiouness-probability [
+         set breed sicks
+         set color red
+         set leak leak-probability
+         set speed 0.1
+         set sick? true
+       ]
+    ]
+  ]
 end
 
 @#$#@#$#@
@@ -103,15 +122,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-200
-105
-372
-138
-infectiouness
-infectiouness
+384
+151
+557
+184
+infectiouness-probability
+infectiouness-probability
 0
-100
-70.0
+50
+5.0
 1
 1
 %
@@ -152,10 +171,10 @@ NIL
 0
 
 SLIDER
-18
-302
-190
-335
+21
+332
+193
+365
 lockdown-duration
 lockdown-duration
 0
@@ -167,20 +186,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-22
-274
-207
-296
-Cyclic strategie
+25
+304
+210
+326
+Cyclic strategy
 16
 93.0
 1
 
 SLIDER
-197
-302
-369
-335
+201
+333
+373
+366
 workday-duration
 workday-duration
 0
@@ -201,35 +220,98 @@ Population characteristics\n\n
 93.0
 1
 
-SLIDER
-380
-106
-552
-139
-initial-infecteds
-initial-infecteds
+CHOOSER
+21
+234
+193
+279
+strategy-type
+strategy-type
+"cyclic-strategy" "lockdown-only"
 0
-300
-17.0
+
+TEXTBOX
+23
+209
+173
+229
+Strategy type
+16
+93.0
+1
+
+SLIDER
+202
+151
+374
+184
+leak-probability
+leak-probability
+0
+100
+10.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+203
+106
+375
+139
+households
+households
+0
+20
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-21
-149
+22
+151
 193
-182
-elderly-percentage
-elderly-percentage
+184
+recovery-propability
+recovery-propability
 0
 100
-15.0
+62.0
 1
 1
 %
 HORIZONTAL
+
+SWITCH
+202
+240
+373
+273
+Mass-test
+Mass-test
+0
+1
+-1000
+
+BUTTON
+385
+106
+557
+139
+NIL
+infected
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
