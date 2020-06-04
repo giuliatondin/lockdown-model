@@ -12,6 +12,7 @@ turtles-own [
 globals [
   lockdown?
   counter
+  probability
 ]
 
 to setup
@@ -47,18 +48,53 @@ to infected
 end
 
 to go
-  move-turtles
+  adjust
   epidemic
   tick
+end
+
+;; Call specific strategy
+to adjust
+  if strategy-type = "none" [
+    set lockdown? false
+    move-turtles
+  ]
+  if strategy-type = "lockdown" [
+    lockdown
+  ]
+  if strategy-type = "cyclic" [
+
+  ]
 end
 
 ;; Turtles move about at random.
 to move-turtles
   ask turtles [
     let current-turtle self
-    forward speed display
+    forward 1
     if distance current-turtle < 1 + (count sicks) [
       set heading heading + (random-float 5 - random-float 5)]
+  ]
+end
+
+to lockdown
+  ask turtles [
+     forward 0
+  ]
+  set lockdown? true
+  setup-household-network
+  ;; spread-virus into households //https://ciis.fmrp.usp.br/models/modelo_interativo_usp.html
+end
+
+;; Conection with households in lockdown
+to setup-household-network
+  let num-links (households * population) / 2
+  while [count links < num-links ]
+  [
+    ask one-of turtles
+    [
+      create-link-with one-of other turtles with [not link-neighbor? myself]
+    ]
   ]
 end
 
@@ -67,7 +103,8 @@ to epidemic
   ask sicks [
     let current-sick self
     ask healthys with[distance current-sick < 1 and not immune?] [
-       if random-float 100 < infectiouness-probability [
+       set probability random 100
+       if probability <= infectiouness-probability [
          set breed sicks
          set color red
          set leak leak-probability
@@ -77,7 +114,6 @@ to epidemic
     ]
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 581
@@ -115,7 +151,7 @@ population
 population
 10
 300
-65.0
+10.0
 5
 1
 NIL
@@ -129,8 +165,8 @@ SLIDER
 infectiouness-probability
 infectiouness-probability
 0
-50
-5.0
+100
+28.0
 1
 1
 %
@@ -227,7 +263,7 @@ CHOOSER
 279
 strategy-type
 strategy-type
-"cyclic-strategy" "lockdown-only"
+"none" "lockdown" "cyclic"
 0
 
 TEXTBOX
@@ -249,7 +285,7 @@ leak-probability
 leak-probability
 0
 100
-10.0
+37.0
 1
 1
 %
@@ -264,7 +300,7 @@ households
 households
 0
 20
-3.0
+1.0
 1
 1
 NIL
@@ -275,8 +311,8 @@ SLIDER
 151
 193
 184
-recovery-propability
-recovery-propability
+recovery-probability
+recovery-probability
 0
 100
 62.0
@@ -311,6 +347,16 @@ NIL
 NIL
 NIL
 NIL
+1
+
+TEXTBOX
+135
+309
+345
+337
+(only if cyclic-strategy is select above)
+11
+0.0
 1
 
 @#$#@#$#@
