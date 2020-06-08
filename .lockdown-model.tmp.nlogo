@@ -44,6 +44,7 @@ to infected
     set leak leak-probability
     set speed 0.1
     set sick? true
+    set immune? false
   ]
 end
 
@@ -83,17 +84,34 @@ to lockdown
   ]
   set lockdown? true
   setup-household-network
-  ;; spread-virus into households //https://ciis.fmrp.usp.br/models/modelo_interativo_usp.html
+  spread-virus ;//https://ciis.fmrp.usp.br/models/modelo_interativo_usp.html
 end
 
 ;; Conection with households in lockdown
 to setup-household-network
-  let num-links (households * population) / 2
+  let num-links (population / 2)
   while [count links < num-links ]
   [
     ask one-of turtles
     [
       create-link-with one-of other turtles with [not link-neighbor? myself]
+    ]
+  ]
+  repeat 10
+  [
+    layout-spring turtles links 0.3 (world-width / (sqrt population)) 1
+  ]
+end
+
+to spread-virus-
+ ask turtles with [sick?]
+ [
+    ask link-neighbors with [not immune?]
+    [
+      if random-float 100 < infectiouness-probability
+      [
+        become-infected
+      ]
     ]
   ]
 end
@@ -105,14 +123,19 @@ to epidemic
     ask healthys with[distance current-sick < 1 and not immune?] [
        set probability random 100
        if probability <= infectiouness-probability [
-         set breed sicks
-         set color red
-         set leak leak-probability
-         set speed 0.1
-         set sick? true
+         become-infected
        ]
     ]
   ]
+end
+
+to become-infected
+  set breed sicks
+  set color red
+  set leak leak-probability
+  set speed 0.1
+  set sick? true
+  set immune? false
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -151,7 +174,7 @@ population
 population
 10
 300
-10.0
+60.0
 5
 1
 NIL
@@ -166,7 +189,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-28.0
+27.0
 1
 1
 %
@@ -264,7 +287,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-0
+1
 
 TEXTBOX
 23
@@ -292,27 +315,12 @@ leak-probability
 HORIZONTAL
 
 SLIDER
-203
-106
-375
-139
-households
-households
-0
-20
-1.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 22
 151
 193
 184
-recovery-propability
-recovery-propability
+recovery-probability
+recovery-probability
 0
 100
 62.0
@@ -326,8 +334,8 @@ SWITCH
 240
 373
 273
-Mass-test
-Mass-test
+mass-test
+mass-test
 0
 1
 -1000
