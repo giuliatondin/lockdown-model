@@ -5,8 +5,9 @@ turtles-own [
    sick?               ;; if true, the turtle is infectious
    immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
-   speed
    leak                ;; prob of leak lockdown
+   quarantine?         ;; if true, the turtle respect the quarantine
+   speed
 ]
 
 globals [
@@ -28,37 +29,42 @@ to setup-population
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
     set color green
     set breed healthys
-    set leak leak-probability
     set speed 0.1
     set sick? false
     set sick-time 0
     set immune? false
+    set quarantine? false
+    setup-turtle-leak
   ]
 end
 
-;; turtle become infected
+to setup-turtle-leak
+  let n-turtles (population / 2)
+  ask n-of n-turtles turtles
+  [
+    set leak random 70; ;; check probability
+  ]
+end
+
+;; initial turtles infecteds
 to infected
   ask one-of healthys [
-    set breed sicks
-    set color red
-    set leak leak-probability
-    set speed 0.1
-    set sick? true
-    set immune? false
+    if any? turtles with [color = green]
+      [become-infected]
   ]
 end
 
 to go
   adjust
-  epidemic
   tick
 end
 
-;; Call specific strategy
+;; call specific strategy
 to adjust
   if strategy-type = "none" [
     set lockdown? false
     move-turtles
+    epidemic
   ]
   if strategy-type = "lockdown" [
     lockdown
@@ -68,7 +74,7 @@ to adjust
   ]
 end
 
-;; Turtles move about at random.
+;; turtles move about at random.
 to move-turtles
   ask turtles [
     let current-turtle self
@@ -80,43 +86,35 @@ end
 
 to lockdown
   ask turtles [
-     forward 0
+    ifelse leak > leak-probability
+     [
+        forward 0
+        set quarantine? true
+     ]
+     [
+        forward 1
+        set quarantine? false
+     ]
   ]
   set lockdown? true
-  setup-household-network
-  spread-virus ;//https://ciis.fmrp.usp.br/models/modelo_interativo_usp.html
+  spread-virus-lockdown
 end
 
-;; Conection with households in lockdown
-to setup-household-network
-  let num-links (population / 2)
-  while [count links < num-links ]
-  [
-    ask one-of turtles
-    [
-      create-link-with one-of other turtles with [not link-neighbor? myself]
-    ]
-  ]
-  repeat 10
-  [
-    layout-spring turtles links 0.3 (world-width / (sqrt population)) 1
-  ]
-end
-
-to spread-virus
- ask turtles with [sick?]
+to spread-virus-lockdown
+ ask sicks
  [
-    ask link-neighbors with [not immune?]
-    [
-      if random-float 100 < infectiouness-probability
-      [
-        become-infected
-      ]
+    let current-sick self
+    ;; infect only the turtles that isn't immune and isn't in quarentine
+    ask healthys with[distance current-sick < 2 and not immune? and not quarantine?] [  ;; or distance = 1.5?
+       set probability random 100
+       if probability <= infectiouness-probability [
+         become-infected
+       ]
     ]
-  ]
+ ]
 end
 
-;; Turtles infecting others
+;; turtles infecting others
 to epidemic
   ask sicks [
     let current-sick self
@@ -132,11 +130,10 @@ end
 to become-infected
   set breed sicks
   set color red
-  set leak leak-probability
-  set speed 0.1
   set sick? true
   set immune? false
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 581
@@ -174,7 +171,7 @@ population
 population
 10
 300
-60.0
+10.0
 5
 1
 NIL
@@ -287,7 +284,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-1
+0
 
 TEXTBOX
 23
@@ -308,7 +305,7 @@ leak-probability
 leak-probability
 0
 100
-37.0
+38.0
 1
 1
 %
