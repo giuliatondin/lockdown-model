@@ -2,6 +2,7 @@ breed [healthys healthy]
 breed [sicks sick]
 
 turtles-own [
+   healthy?
    sick?               ;; if true, the turtle is infectious
    immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
@@ -11,9 +12,7 @@ turtles-own [
 ]
 
 globals [
-  lockdown?
-  counter
-  probability
+  cycle-days
 ]
 
 to setup
@@ -33,6 +32,7 @@ to setup-population
     set sick? false
     set sick-time 0
     set immune? false
+    set healthy? true
     ;; set quarantine? false
     ;; setup-turtle-leak
   ]
@@ -46,17 +46,17 @@ end
 ;  ]
 ;end
 
+to go
+  adjust
+  tick
+end
+
 ;; initial turtles infecteds
 to infected
   ask one-of healthys [
     if any? turtles with [color = green]
       [become-infected]
   ]
-end
-
-to go
-  adjust
-  tick
 end
 
 ;; call specific strategy
@@ -68,12 +68,19 @@ to adjust
      ad-lockdown
   ]
   if strategy-type = "cyclic" [
-     let count-workdays 0
+     set cycle-days 0
+     while [ cycle-days < lockdown-duration + workday-duration ]
+     [
+         ifelse cycle-days < workday-duration
+           [ ad-none ]
+           [ ad-lockdown ]
+         set cycle-days (cycle-days + 1)
+         tick
+     ]
   ]
 end
 
 to ad-none
-  set lockdown? false
   move-turtles
   epidemic
   recover-or-die
@@ -82,9 +89,7 @@ end
 to ad-lockdown
   ask turtles [
     forward 0
-    ; set quarantine? true
   ]
-  set lockdown? true
   spread-virus-lockdown
   recover-or-die
 end
@@ -105,9 +110,8 @@ to spread-virus-lockdown
     let current-sick self
     ;; infect only the turtles that isn't immune
     ask healthys with[distance current-sick < 2 and not immune?] [  ;; or distance = 1.5?
-       set probability random 100
-       if probability <= infectiouness-probability [
-         become-infected
+       if random-float 100 <= infectiouness-probability [
+          become-infected
        ]
     ]
  ]
@@ -118,9 +122,8 @@ to epidemic
   ask sicks [
     let current-sick self
     ask healthys with[distance current-sick < 1 and not immune?] [
-       set probability random 100
-       if probability <= infectiouness-probability [
-         become-infected
+       if random-float 100 < infectiouness-probability [
+          become-infected
        ]
     ]
   ]
@@ -132,6 +135,7 @@ to become-infected
   set color red
   set sick? true
   set immune? false
+  set healthy? false
 end
 
 to recover-or-die
@@ -139,19 +143,23 @@ to recover-or-die
     [
       ifelse random-float 100 <= recovery-probability
          [
-           set color green
+           set color gray
            set immune? true
            set sick? false
          ]
          [ die ]
     ]
 end
+
+to-report num-infecteds
+  report count sicks
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-581
-29
-1018
-467
+558
+26
+995
+464
 -1
 -1
 13.0
@@ -183,7 +191,7 @@ population
 population
 10
 300
-80.0
+145.0
 5
 1
 NIL
@@ -198,7 +206,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-27.0
+36.0
 1
 1
 %
@@ -296,7 +304,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-0
+2
 
 TEXTBOX
 23
@@ -309,9 +317,9 @@ Strategy type
 1
 
 SLIDER
-383
+381
 151
-555
+553
 184
 leak-probability
 leak-probability
@@ -332,7 +340,7 @@ recovery-probability
 recovery-probability
 0
 100
-0.0
+49.0
 1
 1
 %
@@ -364,6 +372,38 @@ TEXTBOX
 11
 0.0
 1
+
+MONITOR
+1012
+247
+1123
+292
+Infecteds
+num-infecteds
+0
+1
+11
+
+PLOT
+1010
+26
+1328
+239
+Populations
+days
+people
+0.0
+92.0
+0.0
+300.0
+true
+true
+"" ""
+PENS
+"sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
+"immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
+"never-infected" 1.0 0 -14439633 true "" "plot count healthys"
+"total" 1.0 0 -14454117 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
