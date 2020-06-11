@@ -5,9 +5,9 @@ turtles-own [
    sick?               ;; if true, the turtle is infectious
    immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
-
-   leak                ;; prob of leak lockdown
-   quarantine?         ;; if true, the turtle respect the quarantine
+   speed
+   ;; quarantine?         ;; if true, the turtle respect the quarantine
+   ;; leak                ;; prob of leak lockdown
 ]
 
 globals [
@@ -33,18 +33,18 @@ to setup-population
     set sick? false
     set sick-time 0
     set immune? false
-    set quarantine? false
-    setup-turtle-leak
+    ;; set quarantine? false
+    ;; setup-turtle-leak
   ]
 end
 
-to setup-turtle-leak
-  let n-turtles (population / 2)
-  ask n-of n-turtles turtles
-  [
-    set leak random 70; ;; check probability
-  ]
-end
+;to setup-turtle-leak
+;  let n-turtles (population / 2)
+;  ask n-of n-turtles turtles
+;  [
+;    set leak random 70; ;; check probability
+;  ]
+;end
 
 ;; initial turtles infecteds
 to infected
@@ -62,16 +62,31 @@ end
 ;; call specific strategy
 to adjust
   if strategy-type = "none" [
-    set lockdown? false
-    move-turtles
-    epidemic
+     ad-none
   ]
   if strategy-type = "lockdown" [
-    lockdown
+     ad-lockdown
   ]
   if strategy-type = "cyclic" [
-
+     let count-workdays 0
   ]
+end
+
+to anone
+  set lockdown? false
+  move-turtles
+  epidemic
+  recover-or-die
+end
+
+to lockdown
+  ask turtles [
+    forward 0
+    ; set quarantine? true
+  ]
+  set lockdown? true
+  spread-virus-lockdown
+  recover-or-die
 end
 
 ;; turtles move about at random.
@@ -84,28 +99,12 @@ to move-turtles
   ]
 end
 
-to lockdown
-  ask turtles [
-    ifelse leak > leak-probability
-     [
-        forward 0
-        set quarantine? true
-     ]
-     [
-        forward 1
-        set quarantine? false
-     ]
-  ]
-  set lockdown? true
-  spread-virus-lockdown
-end
-
 to spread-virus-lockdown
  ask sicks
  [
     let current-sick self
-    ;; infect only the turtles that isn't immune and isn't in quarentine
-    ask healthys with[distance current-sick < 2 and not immune? and not quarantine?] [  ;; or distance = 1.5?
+    ;; infect only the turtles that isn't immune
+    ask healthys with[distance current-sick < 2 and not immune?] [  ;; or distance = 1.5?
        set probability random 100
        if probability <= infectiouness-probability [
          become-infected
@@ -129,11 +128,24 @@ end
 
 to become-infected
   set breed sicks
+  set sick-time ticks
   set color red
   set sick? true
   set immune? false
 end
 
+to recover-or-die
+  ask turtles with[sick? and sick-time <= ticks - 14]
+    [
+      ifelse random-float 100 <= recovery-probability
+         [
+           set color green
+           set immune? true
+           set sick? false
+         ]
+         [ die ]
+    ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 581
@@ -171,16 +183,16 @@ population
 population
 10
 300
-10.0
+80.0
 5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-384
+201
 151
-557
+374
 184
 infectiouness-probability
 infectiouness-probability
@@ -297,9 +309,9 @@ Strategy type
 1
 
 SLIDER
-202
+383
 151
-374
+555
 184
 leak-probability
 leak-probability
@@ -320,28 +332,17 @@ recovery-probability
 recovery-probability
 0
 100
-62.0
+0.0
 1
 1
 %
 HORIZONTAL
 
-SWITCH
-202
-240
-373
-273
-mass-test
-mass-test
-0
-1
--1000
-
 BUTTON
-385
-106
-557
-139
+204
+105
+376
+138
 NIL
 infected
 NIL
