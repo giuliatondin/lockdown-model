@@ -392,7 +392,7 @@ true
 PENS
 "sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
-"never-infected" 1.0 0 -14439633 true "" "plot count healthys"
+"never-infected" 1.0 0 -14439633 true "" "plot count healthys with [ not immune? and not sick? and healthy? ]"
 "total" 1.0 0 -14454117 true "" "plot count turtles"
 
 @#$#@#$#@
