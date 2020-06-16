@@ -7,27 +7,19 @@ turtles-own [
    immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
    speed
-   ;; quarantine?         ;; if true, the turtle respect the quarantine
    ;; leak                ;; prob of leak lockdown
 ]
 
 globals [
   cycle-days
-  areaescola
-
+  school-area
 ]
 
 to setup
   clear-all
   setup-population
-  setup-escola
+  setup-school
   reset-ticks
-end
-
-
-to setup-escola
-  set areaescola patches with [pxcor > 1  and pycor > 2]
-  ask areaescola [ set pcolor yellow ]
 end
 
 to setup-population
@@ -45,6 +37,11 @@ to setup-population
     ;; set quarantine? false
     ;; setup-turtle-leak
   ]
+end
+
+to setup-school
+  set school-area patches with [pxcor > 1  and pycor > 2]
+  ask school-area [ set pcolor yellow ]
 end
 
 ;to setup-turtle-leak
@@ -161,9 +158,9 @@ to recover-or-die
     ]
 end
 
-to-report num-infecteds
-  report count sicks
-end
+;to-report num-infecteds
+;  report count sicks
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 558
@@ -382,17 +379,6 @@ TEXTBOX
 11
 0.0
 1
-
-MONITOR
-1012
-247
-1123
-292
-Infecteds
-num-infecteds
-0
-1
-11
 
 PLOT
 1010

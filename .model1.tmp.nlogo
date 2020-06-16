@@ -13,18 +13,24 @@ turtles-own [
 
 globals [
   cycle-days
-  school-area
+
 ]
 
 to setup
   clear-all
   setup-population
-  setup-school
+  setup-escola
   reset-ticks
 end
 
+
+to setup-escola
+  set areaescola patches with [pxcor > 1  and pycor > 2]
+  ask areaescola [ set pcolor yellow ]
+end
+
 to setup-population
-  set-default-shape turtles "person"
+  ; set-default-shape turtles "person"
   create-turtles population
   [
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
@@ -38,11 +44,6 @@ to setup-population
     ;; set quarantine? false
     ;; setup-turtle-leak
   ]
-end
-
-to setup-school
-  set school-area patches with [pxcor > 1  and pycor > 2]
-  ask school-area [ set pcolor yellow ]
 end
 
 ;to setup-turtle-leak
@@ -159,9 +160,9 @@ to recover-or-die
     ]
 end
 
-to-report num-infecteds
-  report count sicks
-end
+;to-report num-infecteds
+;  report count sicks
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 558
@@ -348,7 +349,7 @@ recovery-probability
 recovery-probability
 0
 100
-80.0
+49.0
 1
 1
 %
@@ -399,7 +400,7 @@ true
 PENS
 "sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
-"never-infected" 1.0 0 -14439633 true "" "plot count healthys with [ not immune? and not sick? and healthy? ]"
+"never-infected" 1.0 0 -14439633 true "" "plot count healthys"
 "total" 1.0 0 -14454117 true "" "plot count turtles"
 
 @#$#@#$#@
