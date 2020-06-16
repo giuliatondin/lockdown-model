@@ -11,7 +11,7 @@ turtles-own [
    ;; leak                ;; prob of leak lockdown
 ]
 
- globals [
+globals [
   cycle-days
   areaescola
 
@@ -26,11 +26,9 @@ end
 
 
 to setup-escola
-set areaescola patches with [pxcor > 1  and pycor > 2]
-
+  set areaescola patches with [pxcor > 1  and pycor > 2]
   ask areaescola [ set pcolor yellow ]
 end
-
 
 to setup-population
   set-default-shape turtles "person"
@@ -157,6 +155,7 @@ to recover-or-die
            set color gray
            set immune? true
            set sick? false
+           set breed healthys
          ]
          [ die ]
     ]
