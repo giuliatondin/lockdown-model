@@ -13,11 +13,13 @@ turtles-own [
 
 globals [
   cycle-days
+  school-area
 ]
 
 to setup
   clear-all
   setup-population
+  setup-school
   reset-ticks
 end
 
@@ -36,6 +38,11 @@ to setup-population
     ;; set quarantine? false
     ;; setup-turtle-leak
   ]
+end
+
+to setup-school
+  set school-area patches with [pxcor > 1  and pycor > 2]
+  ask school-area [ set pcolor yellow ]
 end
 
 ;to setup-turtle-leak
@@ -305,7 +312,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-0
+2
 
 TEXTBOX
 23
@@ -392,7 +399,7 @@ true
 PENS
 "sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
-"never-infected" 1.0 0 -14439633 true "" "plot count healthys"
+"never-infected" 1.0 0 -14439633 true "" "plot count healthys with [ not immune? and not sick? and healthy? ]"
 "total" 1.0 0 -14454117 true "" "plot count turtles"
 
 @#$#@#$#@

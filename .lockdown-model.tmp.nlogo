@@ -13,11 +13,13 @@ turtles-own [
 
 globals [
   cycle-days
+  school-area
 ]
 
 to setup
   clear-all
   setup-population
+  setup-school
   reset-ticks
 end
 
@@ -36,6 +38,11 @@ to setup-population
     ;; set quarantine? false
     ;; setup-turtle-leak
   ]
+end
+
+to setup-school
+  set patches with [pxcor > 1  and pycor > 2]
+  ask areaescola [ set pcolor yellow ]
 end
 
 ;to setup-turtle-leak
@@ -305,7 +312,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-0
+2
 
 TEXTBOX
 23
