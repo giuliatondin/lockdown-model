@@ -109,8 +109,12 @@ end
 ;; turtles move about at random.
 to move-turtles
   ask turtles with [shape = "person"][
+
     let current-turtle self
-    forward 1
+    if [pcolor] of patch-ahead 5 != yellow [
+      set heading heading + (random-float 30 - random-float 100)
+      forward 1]
+
     if distance current-turtle < 1 + (count sicks) [
       set heading heading + (random-float 5 - random-float 5)]
   ]
@@ -225,7 +229,7 @@ population
 population
 12
 300
-47.0
+62.0
 5
 1
 NIL
@@ -240,7 +244,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-36.0
+100.0
 1
 1
 %
@@ -359,7 +363,7 @@ recovery-probability
 recovery-probability
 0
 100
-49.0
+27.0
 1
 1
 %
