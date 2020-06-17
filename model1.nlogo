@@ -111,10 +111,14 @@ to move-turtles
   ask turtles with [shape = "person"][
 
     let current-turtle self
-    if [pcolor] of patch-ahead 5 != yellow [
-      set heading heading + (random-float 30 - random-float 100)
+    if [pcolor] of patch-ahead 1 != yellow [
+      set heading heading + (random-float 3 - random-float 3)
       forward 1]
 
+    if [pcolor] of patch-ahead 3 = yellow [
+      set heading heading - 100
+      forward 1
+    ]
     if distance current-turtle < 1 + (count sicks) [
       set heading heading + (random-float 5 - random-float 5)]
   ]
