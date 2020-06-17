@@ -1,13 +1,17 @@
 breed [healthys healthy]
 breed [sicks sick]
+breed [houses house]
+breed [schools school]
 
 turtles-own [
-   healthy?
-   sick?               ;; if true, the turtle is infectious
-   immune?             ;; if true, the turtle can't be infected
-   sick-time           ;; how long, in weeks, the turtle has been infectious
-   speed
+  healthy?
+  sick?               ;; if true, the turtle is infectious
+  immune?             ;; if true, the turtle can't be infected
+  sick-time           ;; how long, in weeks, the turtle has been infectious
+  speed
+  homebase            ;; the home patch of this person
 ]
+
 
 globals [
   cycle-days
@@ -18,30 +22,40 @@ globals [
 
 to setup
   clear-all
-  setup-population
+  setup-city
   setup-school
+  setup-population
   reset-ticks
+end
+
+to setup-city
+   create-houses (population / 3) [
+     setxy (random-xcor * 0.9) (random-ycor * 0.50)
+     set color gray set shape "house" set size 10
+   ]
+end
+
+to setup-school
+  set school-area patches with [pxcor > 80  and pycor > 80]
+  ask school-area [ set pcolor yellow ]
 end
 
 to setup-population
   set-default-shape turtles "person"
   create-turtles population
   [
-    setxy (random-xcor * 0.95) (random-ycor * 0.95)
     set color green
+    set size 7
     set breed healthys
     set speed 0.1
     set sick? false
     set sick-time 0
     set immune? false
     set healthy? true
+    set homebase one-of houses
+    move-to homebase
   ]
   set counter-immunes 0
-end
-
-to setup-school
-  set school-area patches with [pxcor > 1  and pycor > 2]
-  ask school-area [ set pcolor yellow ]
 end
 
 to go
@@ -81,7 +95,7 @@ end
 to ad-none
   move-turtles
   epidemic
-  recover-or-die
+  ; recover-or-die
 end
 
 to ad-lockdown
@@ -89,7 +103,7 @@ to ad-lockdown
     forward 0
   ]
   spread-virus-lockdown
-  recover-or-die
+  ; recover-or-die
 end
 
 ;; turtles move about at random.
@@ -157,7 +171,10 @@ to-report simulation-days
 end
 
 to-report total-infected
-  report counter-immunes + counter-deaths
+  let result counter-immunes + counter-deaths
+  ifelse result > 0
+    [ report result ]
+    [ report 0 ]
 end
 
 to-report total-immune
@@ -167,17 +184,19 @@ end
 to-report total-deaths
   let current-population count turtles
   set counter-deaths population - current-population
-  report counter-deaths
+  ifelse counter-deaths > 0
+    [ report counter-deaths ]
+    [ report 0 ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-402
+390
 15
-839
-453
+849
+475
 -1
 -1
-13.0
+1.5
 1
 10
 1
@@ -187,10 +206,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-150
+150
+-150
+150
 0
 0
 1
@@ -205,8 +224,8 @@ SLIDER
 population
 population
 12
-999
-225.0
+300
+67.0
 5
 1
 NIL
@@ -319,7 +338,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-2
+0
 
 TEXTBOX
 23
@@ -436,6 +455,27 @@ total-infected
 0
 1
 11
+
+SWITCH
+201
+246
+373
+279
+prevention-care?
+prevention-care?
+1
+1
+-1000
+
+TEXTBOX
+211
+228
+407
+256
+(mask, safe distance and so on)
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
