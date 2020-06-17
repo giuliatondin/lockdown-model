@@ -108,7 +108,7 @@ end
 
 ;; turtles move about at random.
 to move-turtles
-  ask turtles [
+  ask turtles with [shape = "person"][
     let current-turtle self
     forward 1
     if distance current-turtle < 1 + (count sicks) [
@@ -225,7 +225,7 @@ population
 population
 12
 300
-67.0
+47.0
 5
 1
 NIL
