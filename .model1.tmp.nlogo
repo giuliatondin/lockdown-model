@@ -7,30 +7,24 @@ turtles-own [
    immune?             ;; if true, the turtle can't be infected
    sick-time           ;; how long, in weeks, the turtle has been infectious
    speed
-   ;; quarantine?         ;; if true, the turtle respect the quarantine
-   ;; leak                ;; prob of leak lockdown
 ]
 
 globals [
   cycle-days
-
+  school-area
+  counter-immunes
+  counter-deaths
 ]
 
 to setup
   clear-all
   setup-population
-  setup-escola
+  setup-school
   reset-ticks
 end
 
-
-to setup-escola
-  set areaescola patches with [pxcor > 1  and pycor > 2]
-  ask areaescola [ set pcolor yellow ]
-end
-
 to setup-population
-  ; set-default-shape turtles "person"
+  set-default-shape turtles "person"
   create-turtles population
   [
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
@@ -41,18 +35,14 @@ to setup-population
     set sick-time 0
     set immune? false
     set healthy? true
-    ;; set quarantine? false
-    ;; setup-turtle-leak
   ]
+  set counter-immunes 0
 end
 
-;to setup-turtle-leak
-;  let n-turtles (population / 2)
-;  ask n-of n-turtles turtles
-;  [
-;    set leak random 70; ;; check probability
-;  ]
-;end
+to setup-school
+  set school-area patches with [pxcor > 1  and pycor > 2]
+  ask school-area [ set pcolor yellow ]
+end
 
 to go
   adjust
@@ -155,20 +145,36 @@ to recover-or-die
            set immune? true
            set sick? false
            set breed healthys
+           set counter-immunes counter-immunes + 1
          ]
          [ die ]
     ]
 end
 
-;to-report num-infecteds
-;  report count sicks
-;end
+; Report data of simulation
+to-report simulation-days
+  report ticks
+end
+
+to-report total-infected
+  report counter-immunes + counter-deaths
+end
+
+to-report total-immune
+  report counter-immunes
+end
+
+to-report total-deaths
+  let current-population count turtles
+  set counter-deaths population - current-population
+  report counter-deaths
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-558
-26
-995
-464
+402
+15
+839
+453
 -1
 -1
 13.0
@@ -198,9 +204,9 @@ SLIDER
 138
 population
 population
-10
-300
-145.0
+12
+999
+225.0
 5
 1
 NIL
@@ -263,7 +269,7 @@ SLIDER
 lockdown-duration
 lockdown-duration
 0
-92
+31
 10.0
 1
 1
@@ -288,7 +294,7 @@ SLIDER
 workday-duration
 workday-duration
 0
-92
+31
 4.0
 1
 1
@@ -324,21 +330,6 @@ Strategy type
 16
 93.0
 1
-
-SLIDER
-381
-151
-553
-184
-leak-probability
-leak-probability
-0
-100
-38.0
-1
-1
-%
-HORIZONTAL
 
 SLIDER
 22
@@ -383,10 +374,10 @@ TEXTBOX
 1
 
 PLOT
-1010
-26
-1328
-239
+865
+17
+1302
+267
 Populations
 days
 people
@@ -402,6 +393,50 @@ PENS
 "immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
 "never-infected" 1.0 0 -14439633 true "" "plot count healthys"
 "total" 1.0 0 -14454117 true "" "plot count turtles"
+
+MONITOR
+867
+279
+967
+324
+Total days
+simulation-days
+0
+1
+11
+
+MONITOR
+1090
+279
+1191
+324
+Total recovered
+total-immune
+17
+1
+11
+
+MONITOR
+1201
+278
+1301
+323
+Total deaths
+total-deaths
+0
+1
+11
+
+MONITOR
+977
+279
+1079
+324
+Total infected
+total-infected
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
