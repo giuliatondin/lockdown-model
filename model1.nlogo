@@ -17,7 +17,8 @@ globals [
   cycle-days
   school-area
   day hour
-  tick-day
+  tick-day  ;; how much ticks for count a day
+  n-weeks
 ]
 
 to setup
@@ -25,13 +26,14 @@ to setup
   setup-city
   setup-school
   setup-population
-  set tick-day 50
+  set tick-day 10
+  set n-weeks 0
   reset-ticks
 end
 
 to setup-city
    create-houses (population / 3) [
-     setxy (random-xcor * 0.9) (random-ycor * 0.50)
+     setxy (random-xcor * 0.95) (random-ycor * (0.50))
      set color gray set shape "house" set size 10
    ]
 end
@@ -111,7 +113,9 @@ to ad-none
 end
 
 to ad-lockdown
-  ask turtles [
+  let people (turtle-set healthys sicks)
+  ask people [
+    move-to homebase
     forward 0
   ]
   spread-virus-lockdown
@@ -186,11 +190,19 @@ end
 to-report total-infected
   report count sicks
 end
+
+;to-report total-weeks
+;  if day > 0 [
+;    if (day mod 7) = 0
+;      [ set n-weeks n-weeks + 1 ]
+;  ]
+;  report n-weeks
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
-390
+389
 16
-849
+848
 476
 -1
 -1
@@ -222,8 +234,8 @@ SLIDER
 population
 population
 12
-300
-62.0
+999
+502.0
 5
 1
 NIL
@@ -238,7 +250,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-0.0
+65.0
 1
 1
 %
@@ -357,7 +369,7 @@ recovery-probability
 recovery-probability
 0
 100
-62.0
+0.0
 1
 1
 %
@@ -406,14 +418,14 @@ true
 true
 "" ""
 PENS
-"sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
-"immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
+"sick" 1.0 0 -2674135 true "" "plot count sicks with [ sick? ]"
+"immune" 1.0 0 -7500403 true "" "plot count healthys with [ immune? ]"
 "never-infected" 1.0 0 -14439633 true "" "plot count healthys"
 
 MONITOR
 867
 276
-969
+950
 321
 Total infected
 total-infected
@@ -443,9 +455,9 @@ TEXTBOX
 1
 
 MONITOR
-391
+390
 16
-458
+457
 61
 Clock:
 (word day \"d, \" (hour mod 24) \"h\")
