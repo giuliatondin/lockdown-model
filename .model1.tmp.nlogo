@@ -16,8 +16,7 @@ turtles-own [
 globals [
   cycle-days
   school-area
-  counter-immunes
-  counter-deaths
+  day hour
 ]
 
 to setup
@@ -31,7 +30,7 @@ end
 to setup-city
    create-houses (population / 3) [
      setxy (random-xcor * 0.9) (random-ycor * 0.50)
-     set color gray set shape "house" set size
+     set color gray set shape "house" set size 10
    ]
 end
 
@@ -55,7 +54,6 @@ to setup-population
     set homebase one-of houses
     move-to homebase
   ]
-  set counter-immunes 0
 end
 
 to go
@@ -75,27 +73,39 @@ end
 to adjust
   if strategy-type = "none" [
      ad-none
+     clock
   ]
   if strategy-type = "lockdown" [
      ad-lockdown
+     clock
   ]
   if strategy-type = "cyclic" [
      set cycle-days 0
-     while [ cycle-days < lockdown-duration + workday-duration ]
+     let lockdown-counter (00 * lockdown-duration)
+     let workday-counter (300 * workday-duration)
+     while [ cycle-days < (lockdown-counter + workday-counter) ]
      [
-         ifelse cycle-days < workday-duration
+         ifelse cycle-days <= workday-counter
            [ ad-none ]
            [ ad-lockdown ]
-         set cycle-days (cycle-days + 1)
+         if ticks mod 300 = 0
+           [ set cycle-days (cycle-days + 300) ]
          tick
+         clock
      ]
   ]
+end
+
+;; Update counters of days and hours
+to clock
+  set day int (ticks / 300)           ; track of number of days elapsed since beginning
+  set hour int ((ticks / 300) * 24)   ; track of number of hours elapsed since beginning
 end
 
 to ad-none
   move-turtles
   epidemic
-  ; recover-or-die
+  recover-or-die
 end
 
 to ad-lockdown
@@ -103,16 +113,34 @@ to ad-lockdown
     forward 0
   ]
   spread-virus-lockdown
-  ; recover-or-die
+  recover-or-die
 end
 
 ;; turtles move about at random.
 to move-turtles
-  ask turtles [
+  ask turtles with [shape = "person"][
     let current-turtle self
-    forward 1
+    if [pcolor] of patch-ahead 1 != yellow [
+      set heading heading + (random-float 3 - random-float 3)
+      forward 1]
+    if [pcolor] of patch-ahead 3 = yellow [
+      set heading heading - 100
+      forward 1
+    ]
     if distance current-turtle < 1 + (count sicks) [
       set heading heading + (random-float 5 - random-float 5)]
+  ]
+end
+
+;; turtles infecting others
+to epidemic
+  ask sicks [
+    let current-sick self
+    ask healthys with[distance current-sick < 1 and not immune?] [
+       if random-float 100 < infectiouness-probability [
+          become-infected
+       ]
+    ]
   ]
 end
 
@@ -129,21 +157,9 @@ to spread-virus-lockdown
  ]
 end
 
-;; turtles infecting others
-to epidemic
-  ask sicks [
-    let current-sick self
-    ask healthys with[distance current-sick < 1 and not immune?] [
-       if random-float 100 < infectiouness-probability [
-          become-infected
-       ]
-    ]
-  ]
-end
-
 to become-infected
   set breed sicks
-  set sick-time ticks
+  set sick-time day
   set color red
   set sick? true
   set immune? false
@@ -151,7 +167,7 @@ to become-infected
 end
 
 to recover-or-die
-  ask turtles with[sick? and sick-time <= ticks - 14]
+  ask sicks with[sick-time <= day - 14]
     [
       ifelse random-float 100 <= recovery-probability
          [
@@ -159,41 +175,21 @@ to recover-or-die
            set immune? true
            set sick? false
            set breed healthys
-           set counter-immunes counter-immunes + 1
          ]
          [ die ]
     ]
 end
 
 ; Report data of simulation
-to-report simulation-days
-  report ticks
-end
-
 to-report total-infected
-  let result counter-immunes + counter-deaths
-  ifelse result > 0
-    [ report result ]
-    [ report 0 ]
-end
-
-to-report total-immune
-  report counter-immunes
-end
-
-to-report total-deaths
-  let current-population count turtles
-  set counter-deaths population - current-population
-  ifelse counter-deaths > 0
-    [ report counter-deaths ]
-    [ report 0 ]
+  report count sicks
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-390
-15
-849
-475
+392
+17
+851
+477
 -1
 -1
 1.5
@@ -225,7 +221,7 @@ population
 population
 12
 300
-67.0
+62.0
 5
 1
 NIL
@@ -240,7 +236,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-36.0
+0.0
 1
 1
 %
@@ -338,7 +334,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-0
+2
 
 TEXTBOX
 23
@@ -359,7 +355,7 @@ recovery-probability
 recovery-probability
 0
 100
-49.0
+62.0
 1
 1
 %
@@ -414,42 +410,9 @@ PENS
 
 MONITOR
 867
-279
-967
-324
-Total days
-simulation-days
-0
-1
-11
-
-MONITOR
-1090
-279
-1191
-324
-Total recovered
-total-immune
-17
-1
-11
-
-MONITOR
-1201
-278
-1301
-323
-Total deaths
-total-deaths
-0
-1
-11
-
-MONITOR
-977
-279
-1079
-324
+276
+969
+321
 Total infected
 total-infected
 0
@@ -476,6 +439,17 @@ TEXTBOX
 11
 0.0
 1
+
+MONITOR
+393
+17
+460
+62
+Clock:
+(word day \"d, \" (hour mod 24) \"h\")
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
