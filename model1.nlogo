@@ -17,6 +17,7 @@ globals [
   cycle-days
   school-area
   day hour
+  tick-day
 ]
 
 to setup
@@ -24,6 +25,7 @@ to setup
   setup-city
   setup-school
   setup-population
+  set tick-day 50
   reset-ticks
 end
 
@@ -81,15 +83,15 @@ to adjust
   ]
   if strategy-type = "cyclic" [
      set cycle-days 0
-     let lockdown-counter (100 * lockdown-duration)
-     let workday-counter (100 * workday-duration)
+     let lockdown-counter (tick-day * lockdown-duration)
+     let workday-counter (tick-day * workday-duration)
      while [ cycle-days < (lockdown-counter + workday-counter) ]
      [
          ifelse cycle-days < workday-counter
            [ ad-none ]
            [ ad-lockdown ]
-         if ticks mod 100 = 0
-           [ set cycle-days (cycle-days + 100) ]
+         if ticks mod tick-day = 0
+           [ set cycle-days (cycle-days + tick-day) ]
          tick
          clock
      ]
@@ -98,8 +100,8 @@ end
 
 ;; Update counters of days and hours
 to clock
-  set day int (ticks / 100)           ; track of number of days elapsed since beginning
-  set hour int ((ticks / 100) * 24)   ; track of number of hours elapsed since beginning
+  set day int (ticks / tick-day)           ; track of number of days elapsed since beginning
+  set hour int ((ticks / tick-day) * 24)   ; track of number of hours elapsed since beginning
 end
 
 to ad-none
@@ -186,10 +188,10 @@ to-report total-infected
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-392
-17
-851
-477
+390
+16
+849
+476
 -1
 -1
 1.5
@@ -441,10 +443,10 @@ TEXTBOX
 1
 
 MONITOR
-393
-17
-460
-62
+391
+16
+458
+61
 Clock:
 (word day \"d, \" (hour mod 24) \"h\")
 17
