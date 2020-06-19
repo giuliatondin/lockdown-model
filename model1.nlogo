@@ -26,7 +26,7 @@ to setup
   setup-city
   setup-school
   setup-population
-  set tick-day 30
+  set tick-day 10
   set n-weeks 0
   reset-ticks
 end
@@ -140,8 +140,14 @@ to epidemic
   ask sicks [
     let current-sick self
     ask healthys with[distance current-sick < 1 and not immune?] [
-       if random-float 100 < infectiouness-probability [
-          become-infected
+       ifelse not prevention-care?
+       [ if random-float 100 < infectiouness-probability
+           [ become-infected ]
+       ]
+       [
+         let prob-with-prevention random-float 60
+         if random-float 100 < (infectiouness-probability - prob-with-prevention)
+           [ become-infected ]
        ]
     ]
   ]
@@ -345,7 +351,7 @@ CHOOSER
 strategy-type
 strategy-type
 "none" "lockdown" "cyclic"
-2
+0
 
 TEXTBOX
 23
@@ -420,7 +426,7 @@ SWITCH
 279
 prevention-care?
 prevention-care?
-1
+0
 1
 -1000
 
