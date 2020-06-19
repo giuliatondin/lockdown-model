@@ -26,7 +26,7 @@ to setup
   setup-city
   setup-school
   setup-population
-  set tick-day 10
+  set tick-day 30
   set n-weeks 0
   reset-ticks
 end
@@ -34,12 +34,12 @@ end
 to setup-city
    create-houses (population / 3) [
      setxy (random-xcor * 0.95) (random-ycor * (0.50))
-     set color gray set shape "house" set size 10
+     set color white set shape "house" set size 12
    ]
 end
 
 to setup-school
-  set school-area patches with [pxcor > 80  and pycor > 80]
+  set school-area patches with [pxcor > 20  and pycor > 90]
   ask school-area [ set pcolor yellow ]
 end
 
@@ -58,19 +58,13 @@ to setup-population
     set homebase one-of houses
     move-to homebase
   ]
+  ask n-of initial-infecteds healthys
+    [ become-infected ]
 end
 
 to go
   adjust
   tick
-end
-
-;; initial turtles infecteds
-to infected
-  ask one-of healthys [
-    if any? turtles with [color = green]
-      [become-infected]
-  ]
 end
 
 ;; call specific strategy
@@ -117,6 +111,9 @@ to ad-lockdown
   ask people [
     move-to homebase
     forward 0
+  ]
+  ask houses [
+    set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
   ]
   spread-virus-lockdown
   recover-or-die
@@ -369,28 +366,11 @@ recovery-probability
 recovery-probability
 0
 100
-0.0
+76.0
 1
 1
 %
 HORIZONTAL
-
-BUTTON
-204
-105
-376
-138
-NIL
-infected
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 TEXTBOX
 135
@@ -464,6 +444,21 @@ Clock:
 17
 1
 11
+
+SLIDER
+202
+105
+374
+138
+initial-infecteds
+initial-infecteds
+0
+100
+14.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
