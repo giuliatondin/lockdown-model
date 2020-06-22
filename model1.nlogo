@@ -8,6 +8,7 @@ turtles-own [
   sick?               ;; if true, the turtle is infectious
   immune?             ;; if true, the turtle can't be infected
   sick-time           ;; how long, in weeks, the turtle has been infectious
+  immune-time
   speed
   homebase            ;; the home patch of this person
   leak-prob
@@ -59,6 +60,7 @@ to setup-population
     set sick? false
     set sick-time 0
     set immune? false
+    set immune-time 0
     set healthy? true
     set severity 0
     set homebase one-of houses
@@ -80,6 +82,7 @@ end
 
 to go
   adjust
+  immunity-duration
   tick
 end
 
@@ -146,10 +149,13 @@ end
 
 ;; student turtles move to school
 to move-to-school
-  ask turtles with [shape = "person"][
+  ask turtles with[shape = "person"][
     if student?
     [
-      move-to one-of patches with [pcolor = yellow]
+      ifelse sick? and severity = 1
+        [ move-to homebase
+          forward 0 ]
+        [ move-to one-of patches with [pcolor = yellow] ]
     ]
   ]
   epidemic
@@ -236,8 +242,16 @@ end
 to become-well
   set color gray
   set immune? true
+  set immune-time day
   set sick? false
   set breed healthys
+end
+
+to immunity-duration
+  ask healthys with[immune? and immune-time <= day - 92]
+    [ set immune? false
+      set color green
+      set immune-time 0 ]
 end
 
 ; Report data of simulation
@@ -285,7 +299,7 @@ population
 population
 12
 999
-225.0
+12.0
 3
 1
 NIL
@@ -300,7 +314,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-0.0
+65.0
 1
 1
 %
@@ -419,7 +433,7 @@ recovery-probability
 recovery-probability
 0
 100
-100.0
+38.0
 1
 1
 %
@@ -458,9 +472,9 @@ PENS
 
 MONITOR
 864
-349
+348
 959
-394
+393
 Total infected
 total-infected
 0
@@ -508,7 +522,7 @@ initial-infecteds
 initial-infecteds
 0
 100
-0.0
+29.0
 1
 1
 NIL
@@ -516,9 +530,9 @@ HORIZONTAL
 
 MONITOR
 967
-349
+348
 1106
-394
+393
 Total of infected students
 n-students-sicks
 17
