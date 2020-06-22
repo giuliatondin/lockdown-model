@@ -80,10 +80,10 @@ to adjust
   if strategy-type = "cyclic" [
      set cycle-days 0
      let lockdown-counter (tick-day * lockdown-duration)
-     let workday-counter (tick-day * workday-duration)
-     while [ cycle-days < (lockdown-counter + workday-counter) ]
+     let schoolday-counter (tick-day * schoolday-duration)
+     while [ cycle-days < (lockdown-counter + schoolday-counter) ]
      [
-         ifelse cycle-days < workday-counter
+         ifelse cycle-days < schoolday-counter
            [ ad-none ]
            [ ad-lockdown ]
          if ticks mod tick-day = 0
@@ -238,7 +238,7 @@ population
 population
 12
 999
-502.0
+997.0
 5
 1
 NIL
@@ -323,8 +323,8 @@ SLIDER
 333
 373
 366
-workday-duration
-workday-duration
+schoolday-duration
+schoolday-duration
 0
 31
 4.0
@@ -350,7 +350,7 @@ CHOOSER
 279
 strategy-type
 strategy-type
-"none" "lockdown" "cyclic"
+"cyclic" "lockdown" "none"
 0
 
 TEXTBOX
@@ -475,9 +475,30 @@ HORIZONTAL
 
 (what rules the agents use to create the overall behavior of the model)
 
+São simuladas três tipos de estratégias: 
+
+- **"Cyclic"**: onde durante uma quantidade _x_ de dias a população estudantil poderá ir para a escola e durante uma quantidade _y_, ficará em lockdown em sua casa juntamente com sua família.
+
+- **"Lockdown"**: onde toda a população ficará durante tempo indeterminado em isolamento em cada casa.
+
+- **"None"**: onde nenhuma medida de isolamento é tomada, ou seja, a população movimenta-se livremente pelo ambiente.
+
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Para rodar a simulação, aperte SETUP e depois GO. Visto que a simulação busca analisar a estratégia escolhida ao longo do tempo, para finalizá-la é necessário apertar novamente o botão GO para o deselecionar. 
+
+O slider POPULATION controla quantas pessoas são levadas em consideração na simulação. A quantidade selecionada é um múltiplo de 3, visto que essa população será dividida em HOMEBASES (famílias) e a média de pessoas por família no Brasil é igual a 3, de acordo com o IBGE [2].
+
+Para determinar a quantidade de infectados iniciais de uma população, utilize o slider INITIAL-INFECTEDS.
+
+A variável RECOVERY-PROBABILITY determina a probabilidade máxima de uma pessoa da população, após a contaminação, recuperar-se e tornar-se imune a doença. Enquanto que a variável INFECTIOUNESS-PROBABILITY determina a probabilidade máxima de uma pessoa infectada da população contaminar outra pessoa próxima.
+
+O seletor STRATEGY-TYPE determina a estratégia que será utilizada na simulação, podendo variar entre uma estratégia cíclica, lockdown ou none (nenhuma medida de isolamento é tomada). Visto que essa simulação busca analisar principalmente a estratégia cíclica, ela é tida como valor inicial desse seletor.
+
+Se a variável PREVENTION-CARE? está em "On", a probabilidade de infectar outra pessoa (INFECTIOUNESS-PROBABILITY) é diminuída em até 60%, porcentagem estimada através de estudos [3, 4] que levam em consideração a utilização de máscaras e cuidados de higiene. 
+
+Os sliders LOCKDOWN-DURATION e SCHOOLDAY-DURATION determinam a quantidade de dias do cronograma da estratégia cíclica, onde LOCKDOWN-DURATION determina quantos dias a população ficará isolada em casa, enquanto SCHOOLDAY-DURATION determina quantos dias a população estudantil irá mover-se de casa para a escola.
+
 
 ## THINGS TO NOTICE
 
@@ -491,17 +512,19 @@ HORIZONTAL
 
 (suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
 
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Alvarez, L. and Rojas-Galeano, S. “Simulation of Non-Pharmaceutical Interventions on COVID-19 with an Agent-based Model of Zonal Restraint”. medRxiv pre-print 2020/06/13; https://www.medrxiv.org/content/10.1101/2020.06.13.20130542v1 DOI: 10.1101/2020.06.13.20130542
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+[1] Karin, Omer & Bar-On, Yinon & Milo, Tomer & Katzir, Itay & Mayo, Avi & Korem, Yael & Dudovich, Boaz & Zehavi, Amos & Davidovich, Nadav & Milo, Ron & Alon, Uri. (2020). Adaptive cyclic exit strategies from lockdown to suppress COVID-19 and allow economic activity. DOI: 10.1101/2020.04.04.20053579. 
+
+[2] Ohana, Victor. (2019). IBGE: 2,7% das famílias ganham um quinto de toda a renda no Brasil. Acesso em: 22/06/2020, https://www.cartacapital.com.br/sociedade/ibge-27-das-familias-ganham-um-quinto-de-toda-a-renda-no-brasil/amp/
+
+[3] Holanda, Debora. (2020). Simulador para estudo de comportamento do COVID-19 na população brasileira. Acesso em: 22/06/2020, https://medium.com/@holanda.debora/simulador-para-estudo-de-comportamento-do-covid-19-na-população-brasileira-c809ea8586c9.
+
+[4] Macintyre, Chandini & Chughtai, Abrar. (2015). Facemasks for the prevention of infection in healthcare and community settings. DOI: 10.1136/bmj.h694. 
 @#$#@#$#@
 default
 true
