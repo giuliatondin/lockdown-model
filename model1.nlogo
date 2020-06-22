@@ -10,6 +10,8 @@ turtles-own [
   sick-time           ;; how long, in weeks, the turtle has been infectious
   speed
   homebase            ;; the home patch of this person
+  leak-prob
+  student?            ;; if the turtle is a student or not
 ]
 
 
@@ -18,16 +20,18 @@ globals [
   school-area
   day hour
   tick-day  ;; how much ticks for count a day
-  n-weeks
+  n-students
+  n-students-sicks
 ]
 
 to setup
   clear-all
+  set n-students-sicks 0
+  set tick-day 10
+  set n-weeks 0
   setup-city
   setup-school
   setup-population
-  set tick-day 10
-  set n-weeks 0
   reset-ticks
 end
 
@@ -51,15 +55,24 @@ to setup-population
     set size 7
     set breed healthys
     set speed 0.1
+    set student? false
     set sick? false
     set sick-time 0
     set immune? false
     set healthy? true
     set homebase one-of houses
+    set leak-prob random 100
     move-to homebase
   ]
+  setup-students
   ask n-of initial-infecteds healthys
     [ become-infected ]
+end
+
+to setup-students
+  set n-students (count houses)
+  ask n-of n-students healthys
+     [ set student? true ]
 end
 
 to go
@@ -74,7 +87,11 @@ to adjust
      clock
   ]
   if strategy-type = "lockdown" [
+     let control (count sicks)
      ad-lockdown
+;     ifelse control > 10
+;        [ ad-lockdown ]
+;        [ ad-none ]
      clock
   ]
   if strategy-type = "cyclic" [
@@ -101,7 +118,8 @@ to clock
 end
 
 to ad-none
-  move-turtles
+  move-to-school
+  ; move-turtles
   epidemic
   recover-or-die
 end
@@ -111,12 +129,27 @@ to ad-lockdown
   ask people [
     move-to homebase
     forward 0
+;    ifelse random 50 > leak-prob
+;      [ forward 0
+;        move-to homebase ]
+;      [ forward 1 ]
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
   ]
   spread-virus-lockdown
   recover-or-die
+end
+
+;; student turtles move to school
+to move-to-school
+  ask turtles with [shape = "person"][
+    if student?
+    [
+      move-to one-of patches with [pcolor = yellow]
+      ; epidemic
+    ]
+  ]
 end
 
 ;; turtles move about at random.
@@ -139,7 +172,7 @@ end
 to epidemic
   ask sicks [
     let current-sick self
-    ask healthys with[distance current-sick < 1 and not immune?] [
+    ask healthys with[distance current-sick < 3 and not immune?] [
        ifelse not prevention-care?
        [ if random-float 100 < infectiouness-probability
            [ become-infected ]
@@ -173,6 +206,8 @@ to become-infected
   set sick? true
   set immune? false
   set healthy? false
+  if student?
+    [ set n-students-sicks (n-students-sicks + 1) ]
 end
 
 to recover-or-die
@@ -194,13 +229,9 @@ to-report total-infected
   report count sicks
 end
 
-;to-report total-weeks
-;  if day > 0 [
-;    if (day mod 7) = 0
-;      [ set n-weeks n-weeks + 1 ]
-;  ]
-;  report n-weeks
-;end
+to-report number-of-students
+  report n-students
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 389
@@ -238,7 +269,7 @@ population
 population
 12
 999
-997.0
+362.0
 5
 1
 NIL
@@ -253,7 +284,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-65.0
+46.0
 1
 1
 %
@@ -351,7 +382,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-0
+2
 
 TEXTBOX
 23
@@ -372,7 +403,7 @@ recovery-probability
 recovery-probability
 0
 100
-76.0
+65.0
 1
 1
 %
@@ -391,8 +422,8 @@ TEXTBOX
 PLOT
 865
 17
-1302
-267
+1320
+286
 Populations
 days
 people
@@ -409,10 +440,10 @@ PENS
 "never-infected" 1.0 0 -14439633 true "" "plot count healthys"
 
 MONITOR
-867
-276
-950
-321
+865
+349
+960
+394
 Total infected
 total-infected
 0
@@ -460,11 +491,33 @@ initial-infecteds
 initial-infecteds
 0
 100
-14.0
+11.0
 1
 1
 NIL
 HORIZONTAL
+
+MONITOR
+967
+349
+1106
+394
+Total of infected students
+n-students-sicks
+17
+1
+11
+
+MONITOR
+864
+295
+960
+340
+Total of students
+number-of-students
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
