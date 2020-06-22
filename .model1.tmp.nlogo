@@ -11,7 +11,8 @@ turtles-own [
   speed
   homebase            ;; the home patch of this person
   leak-prob
-  student?
+  student?            ;; if the turtle is a student or not
+  severity            ;; where 0 = mild and 1 = severe symptoms
 ]
 
 
@@ -28,7 +29,6 @@ to setup
   clear-all
   set n-students-sicks 0
   set tick-day 10
-  set n-weeks 0
   setup-city
   setup-school
   setup-population
@@ -60,11 +60,14 @@ to setup-population
     set sick-time 0
     set immune? false
     set healthy? true
+    set severity 0
     set homebase one-of houses
     set leak-prob random 100
     move-to homebase
   ]
   setup-students
+  ask n-of (population / 20) healthys
+    [ set severity 1 ]
   ask n-of initial-infecteds healthys
     [ become-infected ]
 end
@@ -101,7 +104,8 @@ to adjust
      while [ cycle-days < (lockdown-counter + schoolday-counter) ]
      [
          ifelse cycle-days < schoolday-counter
-           [ ad-none ]
+           [ move-to-school
+             epidemic ]
            [ ad-lockdown ]
          if ticks mod tick-day = 0
            [ set cycle-days (cycle-days + tick-day) ]
@@ -111,7 +115,7 @@ to adjust
   ]
 end
 
-;; Update counters of days and hours
+;; update counters of days and hours
 to clock
   set day int (ticks / tick-day)           ; track of number of days elapsed since beginning
   set hour int ((ticks / tick-day) * 24)   ; track of number of hours elapsed since beginning
@@ -119,8 +123,7 @@ end
 
 to ad-none
   move-to-school
-  ; move-turtles
-  epidemic
+  move-turtles
   recover-or-die
 end
 
@@ -147,14 +150,14 @@ to move-to-school
     if student?
     [
       move-to one-of patches with [pcolor = yellow]
-      ; epidemic
     ]
   ]
+  epidemic
 end
 
 ;; turtles move about at random.
 to move-turtles
-  ask turtles with [shape = "person"][
+  ask turtles with [shape = "person" and not student?][
     let current-turtle self
     if [pcolor] of patch-ahead 1 != yellow [
       set heading heading + (random-float 3 - random-float 3)
@@ -166,13 +169,14 @@ to move-turtles
     if distance current-turtle < 1 + (count sicks) [
       set heading heading + (random-float 5 - random-float 5)]
   ]
+  epidemic
 end
 
 ;; turtles infecting others
 to epidemic
   ask sicks [
     let current-sick self
-    ask healthys with[distance current-sick < 3 and not immune?] [
+    ask healthys with[distance current-sick < 2 and not immune?] [
        ifelse not prevention-care?
        [ if random-float 100 < infectiouness-probability
            [ become-infected ]
@@ -186,17 +190,21 @@ to epidemic
   ]
 end
 
+;; turtles infecting others inside house
 to spread-virus-lockdown
  ask sicks
  [
     let current-sick self
-    ;; infect only the turtles that isn't immune
     ask healthys with[distance current-sick < 2 and not immune?] [  ;; or distance = 1.5?
-       if random-float 100 <= infectiouness-probability [
-          become-infected
-       ]
+       if random-float 100 <= infectiouness-probability
+          [ become-infected ]
     ]
  ]
+end
+
+to set-infected
+  ask one-of healthys
+    [ become-infected ]
 end
 
 to become-infected
@@ -211,17 +219,25 @@ to become-infected
 end
 
 to recover-or-die
-  ask sicks with[sick-time <= day - 14]
-    [
-      ifelse random-float 100 <= recovery-probability
-         [
-           set color gray
-           set immune? true
-           set sick? false
-           set breed healthys
-         ]
-         [ die ]
-    ]
+   ask sicks with[severity = 0 and sick-time <= day - (random(14 - 7 + 1) + 7)]
+   [
+     ifelse random-float 100 <= recovery-probability
+     [ become-well ]
+     [ die ]
+   ]
+   ask sicks with[severity = 1 and sick-time <= day - (random(56 - 14 + 1) + 14)]
+   [
+     ifelse random-float 100 <= recovery-probability
+     [ become-well ]
+     [ die ]
+   ]
+end
+
+to become-well
+  set color gray
+  set immune? true
+  set sick? false
+  set breed healthys
 end
 
 ; Report data of simulation
@@ -262,29 +278,29 @@ ticks
 
 SLIDER
 22
-105
+95
 194
-138
+128
 population
 population
 12
 999
-362.0
-5
+225.0
+3
 1
 NIL
 HORIZONTAL
 
 SLIDER
 201
-151
+141
 374
-184
+174
 infectiouness-probability
 infectiouness-probability
 0
 100
-46.0
+0.0
 1
 1
 %
@@ -292,9 +308,9 @@ HORIZONTAL
 
 BUTTON
 21
-29
+19
 84
-62
+52
 NIL
 setup
 NIL
@@ -309,9 +325,9 @@ NIL
 
 BUTTON
 93
-29
+19
 156
-62
+52
 NIL
 go
 T
@@ -326,9 +342,9 @@ NIL
 
 SLIDER
 21
-332
+322
 193
-365
+355
 lockdown-duration
 lockdown-duration
 0
@@ -341,9 +357,9 @@ HORIZONTAL
 
 TEXTBOX
 25
-304
+294
 210
-326
+316
 Cyclic strategy
 16
 93.0
@@ -351,9 +367,9 @@ Cyclic strategy
 
 SLIDER
 201
-333
+323
 373
-366
+356
 schoolday-duration
 schoolday-duration
 0
@@ -366,9 +382,9 @@ HORIZONTAL
 
 TEXTBOX
 24
-80
+70
 220
-98
+88
 Population characteristics\n\n
 16
 93.0
@@ -376,9 +392,9 @@ Population characteristics\n\n
 
 CHOOSER
 21
-234
+224
 193
-279
+269
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
@@ -386,9 +402,9 @@ strategy-type
 
 TEXTBOX
 23
-209
+199
 173
-229
+219
 Strategy type
 16
 93.0
@@ -396,14 +412,14 @@ Strategy type
 
 SLIDER
 22
-151
+141
 193
-184
+174
 recovery-probability
 recovery-probability
 0
 100
-65.0
+100.0
 1
 1
 %
@@ -411,9 +427,9 @@ HORIZONTAL
 
 TEXTBOX
 135
-309
+299
 345
-337
+327
 (only if cyclic-strategy is select above)
 11
 0.0
@@ -435,14 +451,15 @@ true
 true
 "" ""
 PENS
+"total" 1.0 0 -13345367 true "" "let people (turtle-set healthys sicks)\nplot count people"
+"never-infected" 1.0 0 -14439633 true "" "plot count healthys with [ not immune? ]"
 "sick" 1.0 0 -2674135 true "" "plot count sicks with [ sick? ]"
-"immune" 1.0 0 -7500403 true "" "plot count healthys with [ immune? ]"
-"never-infected" 1.0 0 -14439633 true "" "plot count healthys"
+"immunes" 1.0 0 -7500403 true "" "plot count healthys with [ immune? ]"
 
 MONITOR
-865
+864
 349
-960
+959
 394
 Total infected
 total-infected
@@ -452,20 +469,20 @@ total-infected
 
 SWITCH
 201
-246
+236
 373
-279
+269
 prevention-care?
 prevention-care?
-0
+1
 1
 -1000
 
 TEXTBOX
 211
-228
+218
 407
-256
+246
 (mask, safe distance and so on)
 11
 0.0
@@ -484,14 +501,14 @@ Clock:
 
 SLIDER
 202
-105
+95
 374
-138
+128
 initial-infecteds
 initial-infecteds
 0
 100
-11.0
+0.0
 1
 1
 NIL
@@ -519,6 +536,23 @@ number-of-students
 1
 11
 
+BUTTON
+202
+18
+375
+51
+NIL
+set-infected
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -539,6 +573,8 @@ São simuladas três tipos de estratégias:
 ## HOW TO USE IT
 
 Para rodar a simulação, aperte SETUP e depois GO. Visto que a simulação busca analisar a estratégia escolhida ao longo do tempo, para finalizá-la é necessário apertar novamente o botão GO para o deselecionar. 
+
+O botão SET-INFECTED seleciona um pessoa aleatória da população e a
 
 O slider POPULATION controla quantas pessoas são levadas em consideração na simulação. A quantidade selecionada é um múltiplo de 3, visto que essa população será dividida em HOMEBASES (famílias) e a média de pessoas por família no Brasil é igual a 3, de acordo com o IBGE [2].
 
