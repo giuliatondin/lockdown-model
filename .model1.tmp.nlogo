@@ -19,20 +19,24 @@ turtles-own [
 
 globals [
   cycle-days
+  daytime?
   school-area
   day hour
-  tick-day  ;; how much ticks for count a day
+  tick-day
   n-students
   n-students-sicks
+  n-deaths
 ]
 
 to setup
   clear-all
   set n-students-sicks 0
+  set n-deaths 0
   set tick-day 10
   setup-city
   setup-school
   setup-population
+  set daytime? false
   reset-ticks
 end
 
@@ -64,14 +68,21 @@ to setup-population
     set healthy? true
     set severity 0
     set homebase one-of houses
-    set leak-prob random 100
     move-to homebase
   ]
+  setup-turtle-leak
   setup-students
   ask n-of (population / 20) healthys
     [ set severity 1 ]
   ask n-of initial-infecteds healthys
     [ become-infected ]
+end
+
+to setup-turtle-leak
+  ask n-of (population / 2) healthys
+  [
+    set leak-prob random 70
+  ]
 end
 
 to setup-students
@@ -95,9 +106,6 @@ to adjust
   if strategy-type = "lockdown" [
      let control (count sicks)
      ad-lockdown
-;     ifelse control > 10
-;        [ ad-lockdown ]
-;        [ ad-none ]
      clock
   ]
   if strategy-type = "cyclic" [
@@ -122,28 +130,35 @@ end
 to clock
   set day int (ticks / tick-day)           ; track of number of days elapsed since beginning
   set hour int ((ticks / tick-day) * 24)   ; track of number of hours elapsed since beginning
+  ; sunset
 end
 
 to ad-none
   move-to-school
   move-turtles
+  epidemic
   recover-or-die
 end
+
+;to sunset
+;    if (ticks mod (tick-day / 2)) = 0 [
+;      ifelse daytime?
+;      [ ask patches [ set pcolor pcolor + 4 ] ]
+;      [ ask patches [ set pcolor pcolor - 4 ] ]
+;      set daytime? not daytime?
+;  ]
+;end
 
 to ad-lockdown
   let people (turtle-set healthys sicks)
   ask people [
     move-to homebase
     forward 0
-;    ifelse random 50 > leak-prob
-;      [ forward 0
-;        move-to homebase ]
-;      [ forward 1 ]
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
   ]
-  spread-virus-lockdown
+  epidemic
   recover-or-die
 end
 
@@ -196,18 +211,6 @@ to epidemic
   ]
 end
 
-;; turtles infecting others inside house
-to spread-virus-lockdown
- ask sicks
- [
-    let current-sick self
-    ask healthys with[distance current-sick < 2 and not immune?] [  ;; or distance = 1.5?
-       if random-float 100 <= infectiouness-probability
-          [ become-infected ]
-    ]
- ]
-end
-
 to set-infected
   ask one-of healthys
     [ become-infected ]
@@ -229,13 +232,15 @@ to recover-or-die
    [
      ifelse random-float 100 <= recovery-probability
      [ become-well ]
-     [ die ]
+     [ set n-deaths n-deaths + 1
+       die ]
    ]
    ask sicks with[severity = 1 and sick-time <= day - (random(56 - 14 + 1) + 14)]
    [
      ifelse random-float 100 <= recovery-probability
      [ become-well ]
-     [ die ]
+     [ set n-deaths n-deaths + 1
+       die ]
    ]
 end
 
@@ -248,7 +253,7 @@ to become-well
 end
 
 to immunity-duration
-  ask healthys with[immune? and immune-time <= day - 1]
+  ask healthys with[immune? and immune-time <= day - 92]
     [ set immune? false
       set color green
       set immune-time 0 ]
@@ -257,6 +262,10 @@ end
 ; Report data of simulation
 to-report total-infected
   report count sicks
+end
+
+to-report total-deaths
+  report n-deaths
 end
 
 to-report number-of-students
@@ -299,7 +308,7 @@ population
 population
 12
 999
-12.0
+414.0
 3
 1
 NIL
@@ -314,7 +323,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-0.0
+65.0
 1
 1
 %
@@ -356,9 +365,9 @@ NIL
 
 SLIDER
 21
-322
+359
 193
-355
+392
 lockdown-duration
 lockdown-duration
 0
@@ -371,9 +380,9 @@ HORIZONTAL
 
 TEXTBOX
 25
-294
+331
 210
-316
+353
 Cyclic strategy
 16
 93.0
@@ -381,9 +390,9 @@ Cyclic strategy
 
 SLIDER
 201
-323
+360
 373
-356
+393
 schoolday-duration
 schoolday-duration
 0
@@ -406,19 +415,19 @@ Population characteristics\n\n
 
 CHOOSER
 21
-224
+261
 193
-269
+306
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-2
+1
 
 TEXTBOX
 23
-199
+236
 173
-219
+256
 Strategy type
 16
 93.0
@@ -433,7 +442,7 @@ recovery-probability
 recovery-probability
 0
 100
-100.0
+44.0
 1
 1
 %
@@ -441,9 +450,9 @@ HORIZONTAL
 
 TEXTBOX
 135
-299
+336
 345
-327
+364
 (only if cyclic-strategy is select above)
 11
 0.0
@@ -471,10 +480,10 @@ PENS
 "immunes" 1.0 0 -7500403 true "" "plot count healthys with [ immune? ]"
 
 MONITOR
-864
-348
-959
-393
+968
+295
+1063
+340
 Total infected
 total-infected
 0
@@ -483,9 +492,9 @@ total-infected
 
 SWITCH
 201
-236
+273
 373
-269
+306
 prevention-care?
 prevention-care?
 1
@@ -494,9 +503,9 @@ prevention-care?
 
 TEXTBOX
 211
-218
+255
 407
-246
+283
 (mask, safe distance and so on)
 11
 0.0
@@ -522,17 +531,17 @@ initial-infecteds
 initial-infecteds
 0
 100
-1.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-967
-348
-1106
-393
+1075
+296
+1214
+341
 Total of infected students
 n-students-sicks
 17
@@ -566,6 +575,32 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+1225
+295
+1322
+340
+Total of deaths
+total-deaths
+17
+1
+11
+
+SLIDER
+21
+182
+193
+215
+leak-probability
+leak-probability
+0
+100
+55.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
