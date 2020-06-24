@@ -19,11 +19,13 @@ turtles-own [
 
 globals [
   cycle-days
+  daytime?
   school-area
   day hour
   tick-day  ;; how much ticks for count a day
   n-students
   n-students-sicks
+
 ]
 
 to setup
@@ -33,6 +35,8 @@ to setup
   setup-city
   setup-school
   setup-population
+  set daytime? false
+
   reset-ticks
 end
 
@@ -83,6 +87,7 @@ end
 to go
   adjust
   immunity-duration
+
   tick
 end
 
@@ -122,12 +127,24 @@ end
 to clock
   set day int (ticks / tick-day)           ; track of number of days elapsed since beginning
   set hour int ((ticks / tick-day) * 24)   ; track of number of hours elapsed since beginning
+  sunset
 end
 
 to ad-none
   move-to-school
   move-turtles
   recover-or-die
+end
+
+to sunset
+
+    if (ticks mod (tick-day / 2)) = 0 [
+      ifelse daytime?
+      [ ask patches [ set pcolor pcolor + 4 ] ]
+      [ ask patches [ set pcolor pcolor - 4 ] ]
+      set daytime? not daytime?
+
+  ]
 end
 
 to ad-lockdown
@@ -522,7 +539,7 @@ initial-infecteds
 initial-infecteds
 0
 100
-29.0
+0.0
 1
 1
 NIL
