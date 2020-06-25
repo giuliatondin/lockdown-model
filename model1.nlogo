@@ -14,6 +14,7 @@ turtles-own [
   leak-prob
   student?            ;; if the turtle is a student or not
   severity            ;; where 0 = mild and 1 = severe symptoms
+  lockdown?
 ]
 
 
@@ -26,11 +27,13 @@ globals [
   n-students
   n-students-sicks
   n-deaths
+  n-leakers
 ]
 
 to setup
   clear-all
   set n-students-sicks 0
+  set n-leakers 0
   set n-deaths 0
   set tick-day 10
   setup-city
@@ -66,11 +69,13 @@ to setup-population
     set immune? false
     set immune-time 0
     set healthy? true
+    set lockdown? false
     set severity 0
+    set leak-prob 0
     set homebase one-of houses
     move-to homebase
   ]
-  setup-turtle-leak
+  ; setup-population-leak
   setup-students
   ask n-of (population / 20) healthys
     [ set severity 1 ]
@@ -78,10 +83,12 @@ to setup-population
     [ become-infected ]
 end
 
-to setup-turtle-leak
-  ask n-of (population / 2) healthys
+to setup-population-leak
+  ask n-of (population / 3) healthys
   [
-    set leak-prob random 70
+    set leak-prob random 100
+    if leak-prob < leak-probability
+     [ set n-leakers n-leakers + 1 ]
   ]
 end
 
@@ -134,6 +141,7 @@ to clock
 end
 
 to ad-none
+  ask turtles [ set lockdown? false ]
   move-to-school
   move-turtles
   epidemic
@@ -151,9 +159,13 @@ end
 
 to ad-lockdown
   let people (turtle-set healthys sicks)
-  ask people [
-    move-to homebase
-    forward 0
+  ask people
+  [ ifelse leak-prob < leak-probability and leak-prob != 0
+    [ set lockdown? false
+      move-turtles ]
+    [ set lockdown? true
+      move-to homebase
+      forward 0 ]
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
@@ -178,7 +190,7 @@ end
 
 ;; turtles move about at random.
 to move-turtles
-  ask turtles with [shape = "person" and not student?][
+  ask turtles with [shape = "person" and not student? and not lockdown?][
     let current-turtle self
     if [pcolor] of patch-ahead 1 != yellow [
       set heading heading + (random-float 3 - random-float 3)
@@ -271,6 +283,10 @@ end
 to-report number-of-students
   report n-students
 end
+
+to-report number-of-leak
+  report n-leakers
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 389
@@ -308,7 +324,7 @@ population
 population
 12
 999
-414.0
+345.0
 3
 1
 NIL
@@ -364,10 +380,10 @@ NIL
 0
 
 SLIDER
-23
-321
-195
-354
+20
+364
+192
+397
 lockdown-duration
 lockdown-duration
 0
@@ -379,20 +395,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-27
-293
-212
-315
+24
+336
+209
+358
 Cyclic strategy
 16
 93.0
 1
 
 SLIDER
-203
-322
-375
-355
+200
+365
+372
+398
 schoolday-duration
 schoolday-duration
 0
@@ -414,20 +430,20 @@ Population characteristics\n\n
 1
 
 CHOOSER
-23
-223
-195
-268
+20
+266
+192
+311
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
 1
 
 TEXTBOX
-25
-198
-175
-218
+22
+241
+172
+261
 Strategy type
 16
 93.0
@@ -449,10 +465,10 @@ recovery-probability
 HORIZONTAL
 
 TEXTBOX
-137
-298
-347
-326
+134
+341
+344
+369
 (only if cyclic-strategy is select above)
 11
 0.0
@@ -480,9 +496,9 @@ PENS
 "immunes" 1.0 0 -7500403 true "" "plot count healthys with [ immune? ]"
 
 MONITOR
-968
+970
 295
-1063
+1065
 340
 Total infected
 total-infected
@@ -491,10 +507,10 @@ total-infected
 11
 
 SWITCH
-203
-235
-375
-268
+200
+278
+372
+311
 prevention-care?
 prevention-care?
 1
@@ -502,10 +518,10 @@ prevention-care?
 -1000
 
 TEXTBOX
-213
-217
-409
-245
+210
+260
+406
+288
 (mask, safe distance and so on)
 11
 0.0
@@ -531,7 +547,7 @@ initial-infecteds
 initial-infecteds
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -583,6 +599,32 @@ MONITOR
 340
 Total of deaths
 total-deaths
+17
+1
+11
+
+SLIDER
+21
+185
+193
+218
+leak-probability
+leak-probability
+0
+100
+50.0
+1
+1
+%
+HORIZONTAL
+
+MONITOR
+864
+350
+1065
+395
+Number of people breaking quarantine
+number-of-leak
 17
 1
 11
