@@ -20,26 +20,24 @@ turtles-own [
 
 globals [
   cycle-days
-  daytime?
   school-area
   day hour
   tick-day
   n-students
   n-students-sicks
   n-deaths
-  n-leakers
+  n-leaks
 ]
 
 to setup
   clear-all
   set n-students-sicks 0
-  set n-leakers 0
+  set n-leaks 0
   set n-deaths 0
   set tick-day 10
   setup-city
   setup-school
   setup-population
-  set daytime? false
   reset-ticks
 end
 
@@ -75,8 +73,8 @@ to setup-population
     set homebase one-of houses
     move-to homebase
   ]
-  ; setup-population-leak
   setup-students
+  setup-population-leak
   ask n-of (population / 20) healthys
     [ set severity 1 ]
   ask n-of initial-infecteds healthys
@@ -84,11 +82,10 @@ to setup-population
 end
 
 to setup-population-leak
-  ask n-of (population / 3) healthys
+  ask n-of ((population * %-population-leak) / 100) healthys with[not student?]
   [
-    set leak-prob random 100
-    if leak-prob < leak-probability
-     [ set n-leakers n-leakers + 1 ]
+    set leak-prob 1
+    set n-leaks n-leaks + 1
   ]
 end
 
@@ -100,7 +97,8 @@ end
 
 to go
   adjust
-  immunity-duration
+  if immunity-duration?
+    [ immunity-control ]
   tick
 end
 
@@ -119,9 +117,9 @@ to adjust
      set cycle-days 0
      let lockdown-counter (tick-day * lockdown-duration)
      let schoolday-counter (tick-day * schoolday-duration)
-     while [ cycle-days < (lockdown-counter + schoolday-counter) ]
+     while [ cycle-days < (lockdown-counter + schoolday-counter) + 1 ]
      [
-         ifelse cycle-days < schoolday-counter
+         ifelse cycle-days < schoolday-counter + 1
            [ move-to-school
              epidemic ]
            [ ad-lockdown ]
@@ -135,9 +133,8 @@ end
 
 ;; update counters of days and hours
 to clock
-  set day int (ticks / tick-day)           ; track of number of days elapsed since beginning
-  set hour int ((ticks / tick-day) * 24)   ; track of number of hours elapsed since beginning
-  ; sunset
+  set day int (ticks / tick-day)
+  set hour int ((ticks / tick-day) * 24)
 end
 
 to ad-none
@@ -148,24 +145,15 @@ to ad-none
   recover-or-die
 end
 
-;to sunset
-;    if (ticks mod (tick-day / 2)) = 0 [
-;      ifelse daytime?
-;      [ ask patches [ set pcolor pcolor + 4 ] ]
-;      [ ask patches [ set pcolor pcolor - 4 ] ]
-;      set daytime? not daytime?
-;  ]
-;end
-
 to ad-lockdown
   let people (turtle-set healthys sicks)
   ask people
-  [ ifelse leak-prob < leak-probability and leak-prob != 0
-    [ set lockdown? false
-      move-turtles ]
+  [ ifelse leak-prob = 0
     [ set lockdown? true
       move-to homebase
       forward 0 ]
+    [ set lockdown? false
+      move-turtles ]
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
@@ -184,6 +172,13 @@ to move-to-school
           forward 0 ]
         [ move-to one-of patches with [pcolor = yellow] ]
     ]
+  ]
+  let people (turtle-set healthys sicks)
+  ask people with[not student?]
+  [
+    if leak-prob = 1
+    [ set lockdown? false
+      move-turtles ]
   ]
   epidemic
 end
@@ -264,7 +259,7 @@ to become-well
   set breed healthys
 end
 
-to immunity-duration
+to immunity-control
   ask healthys with[immune? and immune-time <= day - 92]
     [ set immune? false
       set color green
@@ -285,7 +280,7 @@ to-report number-of-students
 end
 
 to-report number-of-leak
-  report n-leakers
+  report n-leaks
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -324,7 +319,7 @@ population
 population
 12
 999
-345.0
+195.0
 3
 1
 NIL
@@ -339,7 +334,7 @@ infectiouness-probability
 infectiouness-probability
 0
 100
-65.0
+56.0
 1
 1
 %
@@ -380,10 +375,10 @@ NIL
 0
 
 SLIDER
-20
-364
-192
-397
+17
+439
+189
+472
 lockdown-duration
 lockdown-duration
 0
@@ -395,20 +390,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-24
-336
-209
-358
+21
+411
+206
+433
 Cyclic strategy
 16
 93.0
 1
 
 SLIDER
-200
-365
-372
-398
+197
+440
+369
+473
 schoolday-duration
 schoolday-duration
 0
@@ -437,7 +432,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-1
+0
 
 TEXTBOX
 22
@@ -458,17 +453,17 @@ recovery-probability
 recovery-probability
 0
 100
-44.0
+100.0
 1
 1
 %
 HORIZONTAL
 
 TEXTBOX
-134
+131
+416
 341
-344
-369
+444
 (only if cyclic-strategy is select above)
 11
 0.0
@@ -507,10 +502,10 @@ total-infected
 11
 
 SWITCH
-200
-278
-372
-311
+19
+340
+191
+373
 prevention-care?
 prevention-care?
 1
@@ -518,10 +513,10 @@ prevention-care?
 -1000
 
 TEXTBOX
-210
-260
-406
-288
+19
+322
+215
+350
 (mask, safe distance and so on)
 11
 0.0
@@ -547,7 +542,7 @@ initial-infecteds
 initial-infecteds
 0
 100
-0.0
+29.0
 1
 1
 NIL
@@ -603,21 +598,6 @@ total-deaths
 1
 11
 
-SLIDER
-21
-185
-193
-218
-leak-probability
-leak-probability
-0
-100
-50.0
-1
-1
-%
-HORIZONTAL
-
 MONITOR
 864
 350
@@ -628,6 +608,42 @@ number-of-leak
 17
 1
 11
+
+SLIDER
+21
+185
+193
+218
+%-population-leak
+%-population-leak
+0
+100
+30.0
+1
+1
+%
+HORIZONTAL
+
+SWITCH
+201
+340
+373
+373
+immunity-duration?
+immunity-duration?
+1
+1
+-1000
+
+TEXTBOX
+202
+322
+389
+350
+(if on, immunity duration = 92 days)
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -656,6 +672,8 @@ O slider POPULATION controla quantas pessoas são levadas em consideração na s
 Para determinar a quantidade de infectados iniciais de uma população, utilize o slider INITIAL-INFECTEDS. O botão SET-INFECTED seleciona um pessoa aleatória da população e a torna infetada.
 
 A variável RECOVERY-PROBABILITY determina a probabilidade máxima de uma pessoa da população, após a contaminação, recuperar-se e tornar-se imune a doença. Enquanto que a variável INFECTIOUNESS-PROBABILITY determina a probabilidade máxima de uma pessoa infectada da população contaminar outra pessoa próxima.
+
+O slider %-POPULATION-LEAK determina a porcentagem da população que não adere ao lockdown, movimentando-se pelo ambiente.
 
 O seletor STRATEGY-TYPE determina a estratégia que será utilizada na simulação, podendo variar entre uma estratégia cíclica, lockdown ou none (nenhuma medida de isolamento é tomada). Visto que essa simulação busca analisar principalmente a estratégia cíclica, ela é tida como valor inicial desse seletor.
 
