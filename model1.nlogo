@@ -27,7 +27,6 @@ globals [
   n-students-sicks
   n-deaths
   n-leaks
-
 ]
 
 to setup
@@ -35,7 +34,7 @@ to setup
   set n-students-sicks 0
   set n-leaks 0
   set n-deaths 0
-  set tick-day 20
+  set tick-day 10
   setup-city
   setup-school
   setup-population
@@ -146,11 +145,8 @@ end
 
 to returnhome
   ask turtles with[shape = "person"][
-
-  if ticks mod 10 = 0
-
+  if ticks mod tick-day = 0
     [ move-to homebase]]
-
 end
 
 to ad-none
@@ -164,12 +160,9 @@ end
 to ad-lockdown
   let people (turtle-set healthys sicks)
   ask people
-  [ ifelse leak-prob = 0
-    [ set lockdown? true
-      move-to homebase
-      forward 0 ]
-    [ set lockdown? false
-      move-turtles ]
+  [
+    move-to homebase
+    forward 0
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
@@ -188,13 +181,11 @@ to move-to-school
           forward 0 ]
         [ move-to one-of patches with [pcolor = yellow] ]
     ]
-  ]
-  let people (turtle-set healthys sicks)
-  ask people with[not student?]
-  [
-    if leak-prob = 1
-    [ set lockdown? false
-      move-turtles ]
+;    if leak-prob = 1
+;    [
+;      set lockdown? false
+;      move-turtles
+;    ]
   ]
   epidemic
 end
@@ -448,7 +439,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-2
+0
 
 TEXTBOX
 22
@@ -634,7 +625,7 @@ SLIDER
 %-population-leak
 0
 100
-30.0
+6.0
 1
 1
 %

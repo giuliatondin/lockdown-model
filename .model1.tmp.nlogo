@@ -95,17 +95,22 @@ to setup-students
      [ set student? true ]
 end
 
+
 to go
   adjust
+  returnhome
   if immunity-duration?
     [ immunity-control ]
   tick
+
 end
 
 ;; call specific strategy
 to adjust
+
   if strategy-type = "none" [
      ad-none
+
      clock
   ]
   if strategy-type = "lockdown" [
@@ -135,6 +140,13 @@ end
 to clock
   set day int (ticks / tick-day)
   set hour int ((ticks / tick-day) * 24)
+
+end
+
+to returnhome
+  ask turtles with[shape = "person"][
+  if ticks mod tick-day = 0
+    [ move-to homebase]]
 end
 
 to ad-none
@@ -148,12 +160,9 @@ end
 to ad-lockdown
   let people (turtle-set healthys sicks)
   ask people
-  [ ifelse leak-prob = 0
-    [ set lockdown? true
-      move-to homebase
-      forward 0 ]
-    [ set lockdown? false
-      move-turtles ]
+  [
+    move-to homebase
+    forward 0
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
@@ -172,13 +181,11 @@ to move-to-school
           forward 0 ]
         [ move-to one-of patches with [pcolor = yellow] ]
     ]
-  ]
-  let people (turtle-set healthys sicks)
-  ask people with[not student?]
-  [
-    if leak-prob = 1
-    [ set lockdown? false
-      move-turtles ]
+;    if leak-prob = 1
+    [
+      set lockdown? false
+      move-turtles
+    ]
   ]
   epidemic
 end
@@ -189,7 +196,7 @@ to move-turtles
     let current-turtle self
     if [pcolor] of patch-ahead 1 != yellow [
       set heading heading + (random-float 3 - random-float 3)
-      forward ]
+      forward 1]
     if [pcolor] of patch-ahead 3 = yellow [
       set heading heading - 100
       forward 1
@@ -508,7 +515,7 @@ SWITCH
 373
 prevention-care?
 prevention-care?
-1
+0
 1
 -1000
 
@@ -618,7 +625,7 @@ SLIDER
 %-population-leak
 0
 100
-30.0
+6.0
 1
 1
 %
