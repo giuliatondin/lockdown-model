@@ -1,19 +1,17 @@
 breed [healthys healthy]
 breed [sicks sick]
 breed [houses house]
-breed [schools school]
 
 turtles-own [
   healthy?
-  sick?               ;; if true, the turtle is infectious
-  immune?             ;; if true, the turtle can't be infected
-  sick-time           ;; how long, in weeks, the turtle has been infectious
+  sick?
+  sick-time
+  immune?
   immune-time
-  speed
-  homebase            ;; the home patch of this person
+  homebase
   leak-prob
-  student?            ;; if the turtle is a student or not
-  severity            ;; where 0 = mild and 1 = severe symptoms
+  student?
+  severity    ;; where 0 = mild and 1 = severe symptoms
   lockdown?
 ]
 
@@ -41,6 +39,14 @@ to setup
   reset-ticks
 end
 
+to go
+  adjust
+  return-home
+  if immunity-duration?
+    [ immunity-control ]
+  tick
+end
+
 to setup-city
    create-houses (population / 3) [
      setxy (random-xcor * 0.95) (random-ycor * (0.50))
@@ -60,7 +66,6 @@ to setup-population
     set color green
     set size 7
     set breed healthys
-    set speed 0.1
     set student? false
     set sick? false
     set sick-time 0
@@ -95,22 +100,14 @@ to setup-students
      [ set student? true ]
 end
 
-
-to go
-  adjust
-  returnhome
-  if immunity-duration?
-    [ immunity-control ]
-  tick
-
+to clock
+  set day int (ticks / tick-day)
+  set hour int ((ticks / tick-day) * 24)
 end
 
-;; call specific strategy
 to adjust
-
   if strategy-type = "none" [
      ad-none
-
      clock
   ]
   if strategy-type = "lockdown" [
@@ -136,19 +133,6 @@ to adjust
   ]
 end
 
-;; update counters of days and hours
-to clock
-  set day int (ticks / tick-day)
-  set hour int ((ticks / tick-day) * 24)
-
-end
-
-to returnhome
-  ask turtles with[shape = "person"][
-  if ticks mod tick-day = 0
-    [ move-to homebase]]
-end
-
 to ad-none
   ask turtles [ set lockdown? false ]
   move-to-school
@@ -171,7 +155,22 @@ to ad-lockdown
   recover-or-die
 end
 
-;; student turtles move to school
+to move-turtles
+  ask turtles with [shape = "person" and not student? and not lockdown?][
+    let current-turtle self
+    if [pcolor] of patch-ahead 1 != yellow [
+      set heading heading + (random-float 3 - random-float 3)
+      forward 1]
+    if [pcolor] of patch-ahead 3 = yellow [
+      set heading heading - 100
+      forward 1
+    ]
+    if distance current-turtle < 1 + (count sicks) [
+      set heading heading + (random-float 5 - random-float 5)]
+  ]
+  epidemic
+end
+
 to move-to-school
   ask turtles with[shape = "person"][
     if student?
@@ -190,24 +189,14 @@ to move-to-school
   epidemic
 end
 
-;; turtles move about at random.
-to move-turtles
-  ask turtles with [shape = "person" and not student? and not lockdown?][
-    let current-turtle self
-    if [pcolor] of patch-ahead 1 != yellow [
-      set heading heading + (random-float 3 - random-float 3)
-      forward 1]
-    if [pcolor] of patch-ahead 3 = yellow [
-      set heading heading - 100
-      forward 1
-    ]
-    if distance current-turtle < 1 + (count sicks) [
-      set heading heading + (random-float 5 - random-float 5)]
+to return-home
+  ask turtles with[shape = "person"]
+  [
+    if ticks mod tick-day = 0
+      [ move-to homebase]
   ]
-  epidemic
 end
 
-;; turtles infecting others
 to epidemic
   ask sicks [
     let current-sick self
@@ -241,6 +230,14 @@ to become-infected
     [ set n-students-sicks (n-students-sicks + 1) ]
 end
 
+to become-well
+  set color gray
+  set immune? true
+  set immune-time day
+  set sick? false
+  set breed healthys
+end
+
 to recover-or-die
    ask sicks with[severity = 0 and sick-time <= day - (random(14 - 7 + 1) + 7)]
    [
@@ -256,14 +253,6 @@ to recover-or-die
      [ set n-deaths n-deaths + 1
        die ]
    ]
-end
-
-to become-well
-  set color gray
-  set immune? true
-  set immune-time day
-  set sick? false
-  set breed healthys
 end
 
 to immunity-control
