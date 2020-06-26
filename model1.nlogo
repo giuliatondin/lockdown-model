@@ -27,6 +27,7 @@ globals [
   n-students-sicks
   n-deaths
   n-leaks
+
 ]
 
 to setup
@@ -34,7 +35,7 @@ to setup
   set n-students-sicks 0
   set n-leaks 0
   set n-deaths 0
-  set tick-day 10
+  set tick-day 20
   setup-city
   setup-school
   setup-population
@@ -95,17 +96,22 @@ to setup-students
      [ set student? true ]
 end
 
+
 to go
   adjust
+  returnhome
   if immunity-duration?
     [ immunity-control ]
   tick
+
 end
 
 ;; call specific strategy
 to adjust
+
   if strategy-type = "none" [
      ad-none
+
      clock
   ]
   if strategy-type = "lockdown" [
@@ -135,6 +141,16 @@ end
 to clock
   set day int (ticks / tick-day)
   set hour int ((ticks / tick-day) * 24)
+
+end
+
+to returnhome
+  ask turtles with[shape = "person"][
+
+  if ticks mod 10 = 0
+
+    [ move-to homebase]]
+
 end
 
 to ad-none
@@ -432,7 +448,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-0
+2
 
 TEXTBOX
 22
@@ -508,7 +524,7 @@ SWITCH
 373
 prevention-care?
 prevention-care?
-1
+0
 1
 -1000
 
