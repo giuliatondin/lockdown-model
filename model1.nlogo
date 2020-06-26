@@ -180,19 +180,20 @@ to move-to-school
           forward 0 ]
         [ move-to one-of patches with [pcolor = yellow] ]
     ]
-;    if leak-prob = 1
-;    [
-;      set lockdown? false
-;      move-turtles
-;    ]
+    if leak-prob = 1
+    [
+      set lockdown? false
+      move-turtles
+    ]
   ]
   epidemic
+  return-home
 end
 
 to return-home
   ask turtles with[shape = "person"]
   [
-    if ticks mod tick-day = 0
+    if ticks mod tick-day = 9
       [ move-to homebase]
   ]
 end
@@ -428,7 +429,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-0
+2
 
 TEXTBOX
 22
