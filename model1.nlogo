@@ -72,7 +72,7 @@ to setup-population
     set immune? false
     set immune-time 0
     set healthy? true
-    set lockdown? false
+    set lockdown? true
     set severity 0
     set leak-prob 0
     set homebase one-of houses
@@ -90,6 +90,7 @@ to setup-population-leak
   ask n-of ((population * %-population-leak) / 100) healthys with[not student?]
   [
     set leak-prob 1
+    set lockdown? false
     set n-leaks n-leaks + 1
   ]
 end
@@ -145,8 +146,11 @@ to ad-lockdown
   let people (turtle-set healthys sicks)
   ask people
   [
-    move-to homebase
-    forward 0
+    ifelse not lockdown?
+    [ move-turtles ]
+    [ move-to homebase
+      forward 0
+      set lockdown? true ]
   ]
   ask houses [
     set color ifelse-value any? sicks-here with [ sick? ][ red ][ white ]
@@ -180,9 +184,8 @@ to move-to-school
           forward 0 ]
         [ move-to one-of patches with [pcolor = yellow] ]
     ]
-    if leak-prob = 1
+    if not lockdown?
     [
-      set lockdown? false
       move-turtles
     ]
   ]
@@ -201,7 +204,7 @@ end
 to epidemic
   ask sicks [
     let current-sick self
-    ask healthys with[distance current-sick < 2 and not immune?] [
+    ask healthys with[distance current-sick < 2 and not immune? and not lockdown?] [
        ifelse not prevention-care?
        [ if random-float 100 < infectiouness-probability
            [ become-infected ]
@@ -429,7 +432,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-2
+1
 
 TEXTBOX
 22
