@@ -9,7 +9,6 @@ turtles-own [
   immune?
   immune-time
   homebase
-  leak-prob
   student?
   severity    ;; where 0 = mild and 1 = severe symptoms
   lockdown?
@@ -74,7 +73,6 @@ to setup-population
     set healthy? true
     set lockdown? true
     set severity 0
-    set leak-prob 0
     set homebase one-of houses
     move-to homebase
   ]
@@ -89,7 +87,6 @@ end
 to setup-population-leak
   ask n-of ((population * %-population-leak) / 100) healthys with[not student?]
   [
-    set leak-prob 1
     set lockdown? false
     set n-leaks n-leaks + 1
   ]
@@ -178,6 +175,7 @@ end
 to move-to-school
   ask turtles with[shape = "person"][
     if student?
+    [
       ifelse sick? and severity = 1
         [ move-to homebase
           forward 0 ]
@@ -452,7 +450,7 @@ recovery-probability
 recovery-probability
 0
 100
-100.0
+50.0
 1
 1
 %
@@ -617,7 +615,7 @@ SLIDER
 %-population-leak
 0
 100
-6.0
+30.0
 1
 1
 %
@@ -647,13 +645,15 @@ TEXTBOX
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+O modelo desenvolvido busca lidar com a problemática levantada no estudo de Karin et al. [1]  referente aos países que aderem ao lockdown. Uma estratégia comum dessas regiões que é colocada em questão é a de que o bloqueio da movimentação e atividades econômicas ocorre quando um número limite de casos é excedido e o desbloqueio, quando os casos diminuem. Porém, apesar dessa estratégia contribuir para impedir o sobrecarregamento dos serviços de saúde, ao mesmo tempo continua a acumular casos com cada nova onda, além de levar à incerteza econômica. 
+
+Logo, é proposta uma estratégia cíclica adaptativa para o lockdown através de um modelo matemático, onde em suas variáveis de adaptação são levados em consideração x dias, onde a população realiza suas atividades no meio social, e y dias, onde a população mantém-se em lockdown. No presente modelo, buscou-se adaptar essa estratégia e levar alguns fatores levantados no estudo para uma realizar uma simulação do retorno das aulas presenciais.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+O  foco  da simulação é analisar  como  a  onda  de  novos  casos  de  Covid-19  comporta-se através da estratégia cíclica adaptativa de lockdown em uma situação de retorno das aulas presenciais, podendo compara-la com a estratégia padrão de lockdown ou sem nenhuma restrição de movimentação. Assim, podemos observar como essas diferentes estratégias afetam o número de infectados e mortos ao longo do tempo por essa doença.
 
-São simuladas três tipos de estratégias: 
+Logo, foram definidas três tipos de estratégias: 
 
 - **"Cyclic"**: onde durante uma quantidade _x_ de dias a população estudantil poderá ir para a escola e durante uma quantidade _y_, ficará em lockdown em sua casa juntamente com sua família.
 
@@ -681,17 +681,14 @@ Se a variável PREVENTION-CARE? está em "On", a probabilidade de infectar outra
 Os sliders LOCKDOWN-DURATION e SCHOOLDAY-DURATION determinam a quantidade de dias do cronograma da estratégia cíclica, onde LOCKDOWN-DURATION determina quantos dias a população ficará isolada em casa, enquanto SCHOOLDAY-DURATION determina quantos dias a população estudantil irá mover-se de casa para a escola.
 
 
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
 ## THINGS TO TRY
 
 (suggested things for the user to try to do (move sliders, switches, etc.) with the model)
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+Sugere-se aumentar o modelo e simulá-lo com um número maior de escolas, levando em consideração o transporte dos estudantes até elas (podendo ser infectado nesse caminho, caso utilize transportes públicos). Além disso, recomenda-se adicionar o fator de idade que afeta a probabilidade de recuperação, levando em conta a severidade dos sintomas. Por fim, é interessante simular a "quebra" do lockdown não apenas para aqueles que circulam pelo ambiente, mas também para o que visitam outras casas.  
+
 
 ## RELATED MODELS
 
@@ -705,7 +702,7 @@ Alvarez, L. and Rojas-Galeano, S. “Simulation of Non-Pharmaceutical Interventi
 
 [3] Holanda, Debora. (2020). Simulador para estudo de comportamento do COVID-19 na população brasileira. Acesso em: 22/06/2020, https://medium.com/@holanda.debora/simulador-para-estudo-de-comportamento-do-covid-19-na-população-brasileira-c809ea8586c9.
 
-[4] Macintyre, Chandini & Chughtai, Abrar. (2015). Facemasks for the prevention of infection in healthcare and community settings. DOI: 10.1136/bmj.h694. 
+[4] Macintyre, Chandini & Chughtai, Abrar. (2015). Facemasks for the prevention of infection in healthcare and community settings. DOI: 10.1136/bmj.h69
 @#$#@#$#@
 default
 true
