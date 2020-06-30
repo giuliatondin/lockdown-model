@@ -316,7 +316,7 @@ population
 population
 12
 999
-369.0
+195.0
 3
 1
 NIL
@@ -429,7 +429,7 @@ CHOOSER
 strategy-type
 strategy-type
 "cyclic" "lockdown" "none"
-0
+1
 
 TEXTBOX
 22
@@ -539,7 +539,7 @@ initial-infecteds
 initial-infecteds
 0
 100
-39.0
+29.0
 1
 1
 NIL
@@ -683,15 +683,11 @@ Os sliders LOCKDOWN-DURATION e SCHOOLDAY-DURATION determinam a quantidade de dia
 
 ## THINGS TO TRY
 
-Lembre-se de testar com PREVENTION-CARE? ligado e desligado. Além disso, teste com mais dias de escola e menos dias de lockdown para verificar o comportamento. Verifique os resultados obtidos a partir de diferentes taxas de aderência ao isolamento (%-POPULATION-LEAK).
+(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
 
 ## EXTENDING THE MODEL
 
-<<<<<<< HEAD
 Sugere-se aumentar o modelo e simulá-lo com um número maior de escolas, levando em consideração o transporte dos estudantes até elas (podendo ser infectado nesse caminho, caso utilize transportes públicos). Além disso, recomenda-se adicionar o fator de idade que afeta a probabilidade de recuperação, levando em conta a severidade dos sintomas. Por fim, é interessante simular a "quebra" do lockdown não apenas para aqueles que circulam pelo ambiente, mas também para o que visitam outras casas.  
-=======
-Sugere-se aumentar o modelo e simulá-lo com um número maior de escolas, levando em consideração o transporte dos estudantes até elas (podendo ser infectado nesse caminho, caso utilize transportes públicos). Além disso, recomenda-se adicionar o fator de idade que afeta a probabilidade de recuperação, levando em conta a severidade dos sintomas. Por fim, é interessante simular a "quebra" do lockdown não apenas para aqueles que circulam pelo ambiente, mas também para os que visitam outras casas.  
->>>>>>> 07ca1182d333f5fd36745044bb0113bda6aef673
 
 
 ## RELATED MODELS
