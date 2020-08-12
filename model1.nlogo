@@ -680,19 +680,13 @@ Se a variável PREVENTION-CARE? está em "On", a probabilidade de infectar outra
 
 Os sliders LOCKDOWN-DURATION e SCHOOLDAY-DURATION determinam a quantidade de dias do cronograma da estratégia cíclica, onde LOCKDOWN-DURATION determina quantos dias a população ficará isolada em casa, enquanto SCHOOLDAY-DURATION determina quantos dias a população estudantil irá mover-se de casa para a escola.
 
-
 ## THINGS TO TRY
 
 Lembre-se de testar com PREVENTION-CARE? ligado e desligado. Além disso, teste com mais dias de escola e menos dias de lockdown para verificar o comportamento. Verifique os resultados obtidos a partir de diferentes taxas de aderência ao isolamento (%-POPULATION-LEAK).
 
 ## EXTENDING THE MODEL
 
-<<<<<<< HEAD
-Sugere-se aumentar o modelo e simulá-lo com um número maior de escolas, levando em consideração o transporte dos estudantes até elas (podendo ser infectado nesse caminho, caso utilize transportes públicos). Além disso, recomenda-se adicionar o fator de idade que afeta a probabilidade de recuperação, levando em conta a severidade dos sintomas. Por fim, é interessante simular a "quebra" do lockdown não apenas para aqueles que circulam pelo ambiente, mas também para o que visitam outras casas.  
-=======
 Sugere-se aumentar o modelo e simulá-lo com um número maior de escolas, levando em consideração o transporte dos estudantes até elas (podendo ser infectado nesse caminho, caso utilize transportes públicos). Além disso, recomenda-se adicionar o fator de idade que afeta a probabilidade de recuperação, levando em conta a severidade dos sintomas. Por fim, é interessante simular a "quebra" do lockdown não apenas para aqueles que circulam pelo ambiente, mas também para os que visitam outras casas.  
->>>>>>> 07ca1182d333f5fd36745044bb0113bda6aef673
-
 
 ## RELATED MODELS
 
